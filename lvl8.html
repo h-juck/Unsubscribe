@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unsubscribe Game - Level 8</title>
+    <style>
+        body {
+            /* Hintergrundbild */
+            background-image: url('bg02.gif'); /* Stellen Sie sicher, dass bg02.gif im gleichen Verzeichnis liegt */
+            background-size: cover; /* Bild soll den gesamten Hintergrund ausfüllen */
+            background-repeat: no-repeat;
+            background-position: center center;
+            margin: 0; /* Entfernt Standardabstände */
+            font-family: Arial, sans-serif;
+            color: #FFFFFF; /* Schriftfarbe auf Weiß setzen */
+            overflow: hidden; /* Verhindert Scrollen durch Inhalte */
+            position: relative; /* Für den Musik-Controller */
+        }
+
+        /* Styling für den Musik-Controller */
+        .music-controller {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        .music-controller button {
+            background-color: #007BFF;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            margin-left: 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .music-controller button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Styling für das Spiel-Fenster */
+        .game-window {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            z-index: 1; /* Unterhalb der Sterne */
+        }
+
+        .game-window h1 {
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            color: #FFFFFF; /* Schriftfarbe auf Weiß setzen */
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* Container für die Sterne */
+        .stars-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .star {
+            font-size: 3em;
+            color: #cccccc; /* Grau für unausgefüllte Sterne */
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .star.filled {
+            color: #FFD700; /* Gold für ausgefüllte Sterne */
+        }
+
+        /* Styling für den Unsubscribe-Button */
+        .unsubscribe-button {
+            padding: 15px 30px;
+            background-color: #cccccc; /* Grau als deaktivierter Zustand */
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 1.2em;
+            cursor: not-allowed; /* Cursor zeigt, dass der Button nicht aktiv ist */
+            transition: background-color 0.3s ease, cursor 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .unsubscribe-button.enabled {
+            background-color: #007BFF; /* Blau im aktivierten Zustand */
+            cursor: pointer;
+        }
+
+        .unsubscribe-button:hover.enabled {
+            background-color: #0056b3;
+        }
+
+        /* Responsives Design */
+        @media (max-width: 600px) {
+            .star {
+                font-size: 2.5em;
+            }
+
+            .unsubscribe-button {
+                padding: 10px 20px;
+                font-size: 1em;
+            }
+
+            .game-window h1 {
+                font-size: 2em;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Musik-Controller -->
+    <div class="music-controller">
+        <span>🎵 Musik</span>
+        <button id="music-toggle">Pause</button>
+    </div>
+
+    <!-- Spiel-Fenster -->
+    <div class="game-window">
+        <h1>Rate your experience</h1>
+        <div class="stars-container" id="stars-container">
+            <span class="star" data-value="1">&#9734;</span>
+            <span class="star" data-value="2">&#9734;</span>
+            <span class="star" data-value="3">&#9734;</span>
+            <span class="star" data-value="4">&#9734;</span>
+            <span class="star" data-value="5">&#9734;</span>
+        </div>
+        <button class="unsubscribe-button" id="unsubscribe-button" disabled>Unsubscribe</button>
+    </div>
+
+    <!-- Hintergrundmusik -->
+    <audio id="bgm" src="bgm01.mp3" loop></audio>
+
+    <script>
+        // Referenzen zu DOM-Elementen
+        const starsContainer = document.getElementById('stars-container');
+        const stars = document.querySelectorAll('.star');
+        const unsubscribeButton = document.getElementById('unsubscribe-button');
+        const musicToggleButton = document.getElementById('music-toggle');
+        const bgm = document.getElementById('bgm');
+
+        let selectedRating = 0;
+
+        // Hintergrundmusik automatisch abspielen (abhängig vom Browser)
+        window.addEventListener('load', function() {
+            bgm.play().catch(function(error) {
+                // Autoplay wurde blockiert, Musik kann durch Benutzeraktion gestartet werden
+                console.log('Autoplay blockiert:', error);
+            });
+        });
+
+        // Musik-Controller Funktionalität
+        let isPlaying = true;
+        musicToggleButton.addEventListener('click', function() {
+            if (isPlaying) {
+                bgm.pause();
+                musicToggleButton.textContent = 'Play';
+            } else {
+                bgm.play();
+                musicToggleButton.textContent = 'Pause';
+            }
+            isPlaying = !isPlaying;
+        });
+
+        // Funktion zum Setzen der Sterne basierend auf der Bewertung
+        function setRating(rating) {
+            selectedRating = rating;
+            stars.forEach(star => {
+                if (parseInt(star.getAttribute('data-value')) <= rating) {
+                    star.classList.add('filled');
+                    star.innerHTML = '&#9733;'; // Gefüllter Stern
+                } else {
+                    star.classList.remove('filled');
+                    star.innerHTML = '&#9734;'; // Leerster Stern
+                }
+            });
+
+            // Unsubscribe-Button aktivieren, wenn Rating 5 ist
+            if (selectedRating === 5) {
+                unsubscribeButton.disabled = false;
+                unsubscribeButton.classList.add('enabled');
+            } else {
+                unsubscribeButton.disabled = true;
+                unsubscribeButton.classList.remove('enabled');
+            }
+        }
+
+        // Event Listener für das Klicken auf Sterne
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                const rating = parseInt(this.getAttribute('data-value'));
+                setRating(rating);
+            });
+
+            // Optional: Hover-Effekt
+            star.addEventListener('mouseover', function() {
+                const rating = parseInt(this.getAttribute('data-value'));
+                stars.forEach(s => {
+                    if (parseInt(s.getAttribute('data-value')) <= rating) {
+                        s.classList.add('filled');
+                        s.innerHTML = '&#9733;';
+                    } else {
+                        s.classList.remove('filled');
+                        s.innerHTML = '&#9734;';
+                    }
+                });
+            });
+
+            star.addEventListener('mouseout', function() {
+                setRating(selectedRating);
+            });
+        });
+
+        // Unsubscribe-Button Klick-Handler
+        unsubscribeButton.addEventListener('click', function() {
+            if (!this.disabled) {
+                window.location.href = 'lvl9.html';
+            }
+        });
+    </script>
+
+</body>
+</html>

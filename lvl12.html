@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Unsubscribe Game - Level 12</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
+            font-family: Arial, sans-serif;
+        }
+
+        #gameCanvas {
+            display: block;
+            margin: 0 auto;
+            background-image: url('bg03.gif');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center center;
+        }
+
+        /* Styling für den Musik-Controller */
+        .music-controller {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+            z-index: 1000;
+        }
+
+        .music-controller button {
+            background-color: #007BFF;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            margin-left: 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .music-controller button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Styling für Dialogboxen */
+        .dialog-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .dialog-box {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 400px;
+            width: 80%;
+        }
+
+        .dialog-box p {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        .dialog-box button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .dialog-box .blue-button {
+            background-color: #007BFF;
+            color: white;
+        }
+
+        .dialog-box .blue-button:hover {
+            background-color: #0056b3;
+        }
+
+        .dialog-box .red-button {
+            background-color: #DC3545;
+            color: white;
+        }
+
+        .dialog-box .red-button:hover {
+            background-color: #C82333;
+        }
+
+        .dialog-box .gray-button {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .dialog-box .gray-button:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <!-- Musik-Controller -->
+    <div class="music-controller">
+        <span>🎵 Musik</span>
+        <button id="music-toggle">Pause</button>
+    </div>
+
+    <!-- Spiel-Canvas -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Dialog-Overlay -->
+    <div id="dialog-overlay" class="dialog-overlay" style="display: none;">
+        <div class="dialog-box" id="dialog-box">
+            <!-- Inhalt wird dynamisch über JavaScript hinzugefügt -->
+        </div>
+    </div>
+
+    <!-- Hintergrundmusik -->
+    <audio id="bgm" src="bgm01.mp3" loop></audio>
+
+    <script>
+        // Referenzen zu DOM-Elementen
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const musicToggleButton = document.getElementById('music-toggle');
+        const bgm = document.getElementById('bgm');
+        const dialogOverlay = document.getElementById('dialog-overlay');
+        const dialogBox = document.getElementById('dialog-box');
+
+        // Canvas an Fenstergröße anpassen
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Spielvariablen
+        let spaceship = {
+            x: 100,
+            y: canvas.height / 2,
+            size: 60, // Doppelte Größe
+            targetX: 100,
+            targetY: canvas.height / 2
+        };
+
+        let bullets = [];
+        let enemies = [];
+        let particles = [];
+        let enemySpawnTimer = 0;
+        let enemySpawnInterval = 1000; // Alle 1 Sekunde erscheint ein Gegner
+        let dismissButtonsDestroyed = 0;
+        let unsubscribeButtonAppeared = false;
+        let gameOver = false;
+
+        let isMouseDown = false; // Verfolgt, ob die Maustaste gedrückt ist
+        let shootTimer = 0;
+        let shootInterval = 200; // Schießt alle 200ms, solange die Maustaste gedrückt ist
+
+        // Hintergrundmusik starten
+        bgm.play().catch(function(error) {
+            console.log('Autoplay blockiert:', error);
+        });
+
+        // Musik-Controller Funktionalität
+        let isPlaying = true;
+        musicToggleButton.addEventListener('click', function() {
+            if (isPlaying) {
+                bgm.pause();
+                musicToggleButton.textContent = 'Play';
+            } else {
+                bgm.play();
+                musicToggleButton.textContent = 'Pause';
+            }
+            isPlaying = !isPlaying;
+        });
+
+        // Event Listener für Mausaktionen
+        canvas.addEventListener('mousedown', function(event) {
+            isMouseDown = true;
+            moveSpaceship(event);
+        });
+
+        canvas.addEventListener('mouseup', function(event) {
+            isMouseDown = false;
+        });
+
+        canvas.addEventListener('mousemove', function(event) {
+            if (isMouseDown) {
+                moveSpaceship(event);
+            }
+        });
+
+        function moveSpaceship(event) {
+            let rect = canvas.getBoundingClientRect();
+            let mouseX = event.clientX - rect.left;
+            let mouseY = event.clientY - rect.top;
+
+            // Setze das Ziel des Raumschiffs
+            spaceship.targetX = mouseX;
+            spaceship.targetY = mouseY;
+        }
+
+        // Funktion zum Schießen
+        function shootBullets() {
+            let bullet = {
+                x: spaceship.x + spaceship.size / 2,
+                y: spaceship.y,
+                size: 10,
+                speed: 10
+            };
+            bullets.push(bullet);
+        }
+
+        // Funktion zum Erzeugen von Gegnern
+        function spawnEnemy() {
+            if (dismissButtonsDestroyed < 50) {
+                let enemy = {
+                    x: canvas.width + 50,
+                    y: Math.random() * (canvas.height - 100) + 50,
+                    width: 100,
+                    height: 40,
+                    speed: 2,
+                    color: 'red',
+                    type: 'dismiss',
+                    hit: false,
+                    angle: 0
+                };
+                enemies.push(enemy);
+            } else if (!unsubscribeButtonAppeared) {
+                let enemy = {
+                    x: canvas.width + 100,
+                    y: canvas.height / 2 - 25,
+                    width: 150,
+                    height: 50,
+                    speed: 1,
+                    color: 'blue',
+                    type: 'unsubscribe',
+                    hitsNeeded: 20,
+                    hitCount: 0
+                };
+                enemies.push(enemy);
+                unsubscribeButtonAppeared = true;
+            }
+        }
+
+        // Funktion zum Aktualisieren der Spielobjekte
+        function update(deltaTime) {
+            if (gameOver) return;
+
+            // Bewege das Raumschiff zum Ziel
+            let dx = spaceship.targetX - spaceship.x;
+            let dy = spaceship.targetY - spaceship.y;
+            let distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance > 1) {
+                spaceship.x += dx * 0.1;
+                spaceship.y += dy * 0.1;
+            }
+
+            // Schießen, solange die Maustaste gedrückt ist
+            if (isMouseDown) {
+                shootTimer += deltaTime;
+                if (shootTimer >= shootInterval) {
+                    shootBullets();
+                    shootTimer = 0;
+                }
+            }
+
+            // Aktualisiere die Kugeln
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                let b = bullets[i];
+                b.x += b.speed;
+
+                // Entferne die Kugel, wenn sie aus dem Bildschirm fliegt
+                if (b.x > canvas.width) {
+                    bullets.splice(i, 1);
+                    continue;
+                }
+
+                // Prüfe auf Kollision mit Gegnern
+                for (let j = enemies.length - 1; j >= 0; j--) {
+                    let e = enemies[j];
+                    if (!e.hit && isBulletColliding(b, e)) {
+                        // Erstelle Partikeleffekt an der Kollisionsstelle
+                        createParticles(b.x, b.y);
+                        bullets.splice(i, 1);
+
+                        if (e.type === 'dismiss') {
+                            e.hit = true;
+                            e.color = 'gray';
+                            dismissButtonsDestroyed++;
+                        } else if (e.type === 'unsubscribe') {
+                            e.hitCount++;
+                            if (e.hitCount >= e.hitsNeeded) {
+                                // Weiter zu lvl13.html
+                                window.location.href = 'lvl13.html';
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // Aktualisiere die Gegner
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                let e = enemies[i];
+                e.x -= e.speed;
+
+                if (e.hit && e.type === 'dismiss') {
+                    // Getroffene Dismiss-Buttons fallen lassen
+                    e.y += e.speed * 2;
+                    e.angle += 0.05; // Rotieren während des Fallens
+                }
+
+                // Entferne Gegner, die aus dem Bildschirm verschwinden
+                if (e.x + e.width < 0 || e.y > canvas.height + e.height) {
+                    enemies.splice(i, 1);
+                    continue;
+                }
+
+                // Prüfe auf Kollision mit dem Raumschiff
+                if (!e.hit && isRectColliding(spaceship, e)) {
+                    // Spiel pausieren und Dialog anzeigen
+                    isMouseDown = false;
+                    showFirstDialog();
+                    gameOver = true;
+                    return;
+                }
+            }
+
+            // Aktualisiere die Partikel
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.life -= deltaTime;
+                p.scale += p.scaleSpeed * deltaTime;
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+            }
+
+            // Erzeuge neue Gegner
+            enemySpawnTimer += deltaTime;
+            if (enemySpawnTimer >= enemySpawnInterval) {
+                spawnEnemy();
+                enemySpawnTimer = 0;
+            }
+        }
+
+        // Funktion zum Zeichnen der Spielobjekte
+        function draw() {
+            // Canvas leeren
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Raumschiff zeichnen
+            ctx.font = spaceship.size + 'px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillText('\u2708', spaceship.x, spaceship.y); // ✈
+
+            // Kugeln zeichnen
+            for (let b of bullets) {
+                ctx.font = b.size + 'px Arial';
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillText('\u2702', b.x, b.y); // ✂
+            }
+
+            // Gegner zeichnen
+            for (let e of enemies) {
+                ctx.save();
+                ctx.translate(e.x, e.y);
+                if (e.type === 'dismiss' && e.hit) {
+                    ctx.rotate(e.angle);
+                }
+                // Button-ähnlicher Gegner
+                ctx.fillStyle = e.color;
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 2;
+                ctx.fillRect(-e.width / 2, -e.height / 2, e.width, e.height);
+                ctx.strokeRect(-e.width / 2, -e.height / 2, e.width, e.height);
+                ctx.fillStyle = '#FFF';
+                ctx.font = '20px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(e.type === 'dismiss' ? 'Dismiss' : 'Unsubscribe', 0, 0);
+                ctx.restore();
+            }
+
+            // Partikel zeichnen
+            for (let p of particles) {
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.scale(p.scale, p.scale);
+                ctx.font = '40px Arial'; // Doppelte Größe
+                ctx.fillStyle = 'yellow';
+                ctx.fillText('\u2747', 0, 0); // ❇
+                ctx.restore();
+            }
+        }
+
+        // Funktion zur Kollisionsprüfung zwischen Kugel und Gegner
+        function isBulletColliding(bullet, enemy) {
+            return bullet.x > enemy.x - enemy.width / 2 &&
+                   bullet.x < enemy.x + enemy.width / 2 &&
+                   bullet.y > enemy.y - enemy.height / 2 &&
+                   bullet.y < enemy.y + enemy.height / 2;
+        }
+
+        // Funktion zur Kollisionsprüfung zwischen Raumschiff und Gegner
+        function isRectColliding(a, b) {
+            return a.x - a.size / 2 < b.x + b.width / 2 &&
+                   a.x + a.size / 2 > b.x - b.width / 2 &&
+                   a.y - a.size / 2 < b.y + b.height / 2 &&
+                   a.y + a.size / 2 > b.y - b.height / 2;
+        }
+
+        // Funktion zum Erstellen von Partikeln an einer Position
+        function createParticles(x, y) {
+            let particle = {
+                x: x,
+                y: y,
+                life: 500, // 0,5 Sekunden
+                scale: 0.5,
+                scaleSpeed: 0.001 // Skalierungsrate
+            };
+            particles.push(particle);
+        }
+
+        let lastTime = 0;
+        // Hauptspielschleife
+        function gameLoop(timestamp) {
+            let deltaTime = timestamp - lastTime;
+            lastTime = timestamp;
+
+            update(deltaTime);
+            draw();
+            if (!gameOver) {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        // Spielschleife starten
+        requestAnimationFrame(gameLoop);
+
+        // Funktionen für Dialoge
+        function showFirstDialog() {
+            dialogOverlay.style.display = 'flex';
+            dialogBox.innerHTML = `
+                <p>Sure You Want to Dismiss?</p>
+                <button class="blue-button" onclick="redirectToStart()">Yes</button>
+                <button class="red-button" onclick="showSecondDialog()">No</button>
+            `;
+        }
+
+        function showSecondDialog() {
+            dialogBox.innerHTML = `
+                <p>Are you really sure?</p>
+                <button class="gray-button" onclick="closeDialog()">Yes</button>
+                <button class="blue-button" onclick="redirectToStart()">No</button>
+            `;
+        }
+
+        function closeDialog() {
+            dialogOverlay.style.display = 'none';
+            gameOver = false;
+            requestAnimationFrame(gameLoop);
+        }
+
+        function redirectToStart() {
+            window.location.href = 'start.html';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unsubscribe Game - Level 7</title>
+    <style>
+        body {
+            /* Hintergrundbild */
+            background-image: url('bg02.gif'); /* Aktualisiertes Hintergrundbild */
+            background-size: cover; /* Bild soll den gesamten Hintergrund ausfüllen */
+            background-repeat: no-repeat;
+            background-position: center center;
+            margin: 0; /* Entfernt Standardabstände */
+            font-family: Arial, sans-serif;
+            color: #FFFFFF; /* Schriftfarbe auf Weiß setzen */
+            overflow: hidden; /* Verhindert Scrollen durch fallende Buchstaben */
+            position: relative; /* Für den Musik-Controller */
+        }
+
+        /* Styling für den Musik-Controller */
+        .music-controller {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        .music-controller button {
+            background-color: #007BFF;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            margin-left: 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .music-controller button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Styling für das Spiel-Fenster */
+        .game-window {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            z-index: 1; /* Unterhalb der Buchstaben */
+        }
+
+        .game-window h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            color: #FFFFFF; /* Schriftfarbe auf Weiß setzen */
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* Container für fallende Buchstaben */
+        .letters-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Klicks durchlassen */
+            z-index: 2; /* Über dem Spiel-Fenster */
+        }
+
+        /* Styling für einzelne Buchstaben */
+        .letter {
+            position: absolute;
+            top: -50px; /* Startposition oberhalb des Bildschirms */
+            width: 50px;
+            height: 50px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px solid #FFFFFF;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5em;
+            color: #FFFFFF;
+            cursor: pointer;
+            user-select: none;
+            animation: fall linear forwards;
+            pointer-events: auto; /* Klicks auf Buchstaben ermöglichen */
+            z-index: 3; /* Über dem letters-container */
+        }
+
+        /* Animation für fallende Buchstaben */
+        @keyframes fall {
+            to {
+                transform: translateY(100vh);
+            }
+        }
+
+        /* Bereich für angeklickte Buchstaben */
+        .clicked-letters {
+            margin-top: 20px;
+            font-size: 1.5em;
+            color: #FFD700; /* Goldene Farbe für angeklickte Buchstaben */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            min-height: 30px; /* Platzhalterhöhe */
+        }
+
+        /* Styling für den Dismiss-Button */
+        .dismiss-button {
+            padding: 15px 30px;
+            background-color: #cccccc; /* Grau als deaktivierter Zustand */
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 1.2em;
+            cursor: not-allowed; /* Cursor zeigt, dass der Button nicht aktiv ist */
+            transition: background-color 0.3s ease, cursor 0.3s ease;
+            margin-top: 50px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            z-index: 4; /* Über den Buchstaben */
+        }
+
+        .dismiss-button.enabled {
+            background-color: #007BFF; /* Blau im aktivierten Zustand */
+            cursor: pointer;
+        }
+
+        .dismiss-button:hover.enabled {
+            background-color: #0056b3;
+        }
+
+        /* Styling für den Unsubscribe-Button */
+        .unsubscribe-button {
+            padding: 15px 30px;
+            background-color: #cccccc; /* Grau */
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            display: none; /* Anfangs ausgeblendet */
+            z-index: 4; /* Über den Buchstaben */
+        }
+
+        .unsubscribe-button:hover {
+            background-color: #aaaaaa;
+        }
+
+        /* Styling für die Erfolgsnachricht */
+        .success-message {
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #00FF00; /* Grün für Erfolg */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            z-index: 4; /* Über den Buchstaben */
+        }
+
+        /* Responsives Design */
+        @media (max-width: 600px) {
+            .letter {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2em;
+            }
+
+            .dismiss-button, .unsubscribe-button {
+                padding: 10px 20px;
+                font-size: 1em;
+                margin-top: 30px;
+            }
+
+            .game-window h1 {
+                font-size: 2em;
+            }
+
+            .clicked-letters {
+                font-size: 1.2em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Musik-Controller -->
+    <div class="music-controller">
+        <span>🎵 Musik</span>
+        <button id="music-toggle">Pause</button>
+    </div>
+
+    <!-- Container für fallende Buchstaben -->
+    <div class="letters-container" id="letters-container"></div>
+
+    <!-- Spiel-Fenster -->
+    <div class="game-window">
+        <h1>Click UNSUBSCRIBE</h1>
+        <div class="clicked-letters" id="clicked-letters"></div>
+        <button class="dismiss-button" id="dismiss-button" disabled>Dismiss</button>
+        <!-- Unsubscribe-Button -->
+        <button class="unsubscribe-button" id="unsubscribe-button">Unsubscribe</button>
+        <div class="success-message" id="success-message"></div>
+    </div>
+
+    <!-- Hintergrundmusik -->
+    <audio id="bgm" src="bgm01.mp3" loop></audio>
+
+    <script>
+        // Liste der erforderlichen Buchstaben in der richtigen Reihenfolge
+        const requiredLetters = ['U', 'N', 'S', 'U', 'B', 'S', 'C', 'R', 'I', 'B', 'E'];
+        let currentLetterIndex = 0;
+        let clickedLetters = [];
+
+        // Referenzen zu DOM-Elementen
+        const lettersContainer = document.getElementById('letters-container');
+        const dismissButton = document.getElementById('dismiss-button');
+        const unsubscribeButton = document.getElementById('unsubscribe-button');
+        const successMessage = document.getElementById('success-message');
+        const clickedLettersDiv = document.getElementById('clicked-letters');
+        const musicToggleButton = document.getElementById('music-toggle');
+        const bgm = document.getElementById('bgm');
+
+        // Startet die Hintergrundmusik automatisch
+        window.addEventListener('load', function() {
+            bgm.play().catch(function(error) {
+                // Autoplay wurde blockiert
+                console.log('Autoplay blockiert:', error);
+            });
+        });
+
+        // Musik-Controller Funktionalität
+        let isPlaying = true;
+        musicToggleButton.addEventListener('click', function() {
+            if (isPlaying) {
+                bgm.pause();
+                musicToggleButton.textContent = 'Play';
+            } else {
+                bgm.play();
+                musicToggleButton.textContent = 'Pause';
+            }
+            isPlaying = !isPlaying;
+        });
+
+        // Funktion zum Generieren zufälliger Großbuchstaben
+        function getRandomLetter() {
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            return letters.charAt(Math.floor(Math.random() * letters.length));
+        }
+
+        // Funktion zum Erstellen und Starten eines neuen Buchstaben
+        function createLetter() {
+            // Erstelle zwei Buchstaben gleichzeitig
+            for (let i = 0; i < 2; i++) {
+                const letterDiv = document.createElement('div');
+                letterDiv.classList.add('letter');
+                const isRequired = currentLetterIndex < requiredLetters.length && Math.random() < 0.2; // 20% Chance, dass ein erforderlicher Buchstabe erscheint
+
+                if (isRequired) {
+                    letterDiv.textContent = requiredLetters[currentLetterIndex];
+                } else {
+                    letterDiv.textContent = getRandomLetter();
+                }
+
+                // Zufällige horizontale Position
+                const letterWidth = 50; // Feste Breite für Berechnung
+                const maxLeft = window.innerWidth - letterWidth - 20; // Padding von 10px auf jeder Seite
+                const randomLeft = Math.floor(Math.random() * maxLeft) + 10; // Zwischen 10px und maxLeft
+
+                letterDiv.style.left = `${randomLeft}px`;
+
+                // Setze zufällige Dauer für die Fall-Animation zwischen 3 und 6 Sekunden
+                const fallDuration = Math.random() * 3 + 3; // 3s bis 6s
+                letterDiv.style.animationDuration = `${fallDuration}s`;
+
+                // Event Listener für Klick auf den Buchstaben
+                letterDiv.addEventListener('click', function() {
+                    if (letterDiv.textContent === requiredLetters[currentLetterIndex]) {
+                        // Richtiges Buchstaben angeklickt
+                        letterDiv.remove(); // Entfernt den Buchstaben aus dem DOM
+                        clickedLetters.push(letterDiv.textContent);
+                        updateClickedLetters();
+
+                        currentLetterIndex++;
+
+                        if (currentLetterIndex === requiredLetters.length) {
+                            allLettersClicked();
+                        }
+                    } else {
+                        // Falscher Buchstabe angeklickt
+                        // Optional: Feedback anzeigen oder andere Aktionen durchführen
+                        console.log(`Falscher Buchstabe: ${letterDiv.textContent}`);
+                    }
+                });
+
+                // Entfernt den Buchstaben, wenn die Animation endet (erreicht den Boden)
+                letterDiv.addEventListener('animationend', function() {
+                    letterDiv.remove();
+                });
+
+                lettersContainer.appendChild(letterDiv);
+            }
+        }
+
+        // Intervall zum regelmäßigen Erstellen von Buchstaben (alle 1 Sekunde)
+        const letterInterval = setInterval(createLetter, 500);
+
+        // Funktion zur Aktualisierung der angeklickten Buchstabenanzeige
+        function updateClickedLetters() {
+            clickedLettersDiv.textContent = clickedLetters.join(' ');
+        }
+
+        // Funktion, die aufgerufen wird, wenn alle Buchstaben angeklickt wurden
+        function allLettersClicked() {
+            // Dismiss-Button aktivieren
+            dismissButton.disabled = false;
+            dismissButton.classList.add('enabled');
+            
+            // Unsubscribe-Button anzeigen
+            unsubscribeButton.style.display = 'block';
+        }
+
+        // Dismiss-Button Klick-Handler
+        dismissButton.addEventListener('click', function() {
+            if (!this.disabled) {
+                // Weiterleitung zu lvl1.html
+                window.location.href = 'lvl1.html';
+            }
+        });
+
+        // Unsubscribe-Button Klick-Handler
+        unsubscribeButton.addEventListener('click', function() {
+            window.location.href = 'lvl8.html';
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unsubscribe Game - Level 9</title>
+    <style>
+        body {
+            /* Hintergrundbild */
+            background-image: url('bg02.gif'); /* Stellen Sie sicher, dass bg02.gif im gleichen Verzeichnis liegt */
+            background-size: cover; /* Bild soll den gesamten Hintergrund ausfüllen */
+            background-repeat: no-repeat;
+            background-position: center center;
+            margin: 0; /* Entfernt Standardabstände */
+            font-family: Arial, sans-serif;
+            color: #FFFFFF; /* Schriftfarbe auf Weiß setzen */
+            overflow: hidden; /* Verhindert Scrollen durch Inhalte */
+            position: relative; /* Für den Musik-Controller */
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Styling für den Musik-Controller */
+        .music-controller {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        .music-controller button {
+            background-color: #007BFF;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            margin-left: 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .music-controller button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Styling für den Unsubscribe/Dismiss-Button */
+        #toggle-button {
+            position: absolute;
+            padding: 15px 30px;
+            background-color: #007BFF; /* Blau als Anfangszustand */
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            z-index: 2; /* Über dem Hintergrund */
+        }
+
+        #toggle-button.dismiss {
+            background-color: #FF4136; /* Rot für Dismiss */
+        }
+
+        #toggle-button:hover {
+            background-color: #0056b3;
+        }
+
+        #toggle-button.dismiss:hover {
+            background-color: #E12D24;
+        }
+
+        /* Styling für das Dialogfenster */
+        .dialog {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.85);
+            color: #FFFFFF;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            z-index: 4; /* Über dem Unsubscribe/Dismiss-Button */
+            display: none; /* Anfangs versteckt */
+            transform: translate(-50%, -50%);
+        }
+
+        .dialog.visible {
+            display: block;
+        }
+
+        .dialog p {
+            margin: 0 0 20px 0;
+            font-size: 1.2em;
+        }
+
+        .dialog button {
+            padding: 10px 20px;
+            background-color: #FF4136; /* Rot für den Yes-Button */
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-right: 10px; /* Abstand zwischen den Buttons */
+        }
+
+        .dialog button.no-button {
+            background-color: #007BFF; /* Blau für den No-Button */
+        }
+
+        .dialog button:hover {
+            background-color: #E12D24;
+        }
+
+        .dialog button.no-button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Responsives Design */
+        @media (max-width: 600px) {
+            #toggle-button {
+                padding: 10px 20px;
+                font-size: 1em;
+            }
+
+            .dialog p {
+                font-size: 1em;
+            }
+
+            .dialog button {
+                padding: 8px 16px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Musik-Controller -->
+    <div class="music-controller">
+        <span>🎵 Musik</span>
+        <button id="music-toggle">Pause</button>
+    </div>
+
+    <!-- Unsubscribe/Dismiss-Button -->
+    <button id="toggle-button">Unsubscribe</button>
+
+    <!-- Hintergrundmusik -->
+    <audio id="bgm" src="bgm01.mp3" loop></audio>
+
+    <script>
+        // Referenzen zu DOM-Elementen
+        const toggleButton = document.getElementById('toggle-button');
+        const musicToggleButton = document.getElementById('music-toggle');
+        const bgm = document.getElementById('bgm');
+
+        let isUnsubscribe = true; // Startet als Unsubscribe
+        let lastCursorPos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+
+        // Event Listener für Mausbewegung, um Cursorposition zu verfolgen
+        window.addEventListener('mousemove', function(event) {
+            lastCursorPos.x = event.clientX;
+            lastCursorPos.y = event.clientY;
+        });
+
+        // Startet die Hintergrundmusik automatisch
+        window.addEventListener('load', function() {
+            bgm.play().catch(function(error) {
+                // Autoplay wurde blockiert, Musik kann durch Benutzeraktion gestartet werden
+                console.log('Autoplay blockiert:', error);
+            });
+        });
+
+        // Musik-Controller Funktionalität
+        let isPlaying = true;
+        musicToggleButton.addEventListener('click', function() {
+            if (isPlaying) {
+                bgm.pause();
+                musicToggleButton.textContent = 'Play';
+            } else {
+                bgm.play();
+                musicToggleButton.textContent = 'Pause';
+            }
+            isPlaying = !isPlaying;
+        });
+
+        // Funktion zum zufälligen Positionieren und Wechseln des Buttons
+        function moveButton() {
+            const button = toggleButton;
+            const padding = 20; // Abstand vom Rand
+
+            // Berechne die maximalen linken und oberen Positionen
+            const maxLeft = window.innerWidth - button.offsetWidth - padding;
+            const maxTop = window.innerHeight - button.offsetHeight - padding;
+
+            // Zufällige Position innerhalb der Grenzen
+            const randomLeft = Math.floor(Math.random() * maxLeft) + padding;
+            const randomTop = Math.floor(Math.random() * maxTop) + padding;
+
+            button.style.left = `${randomLeft}px`;
+            button.style.top = `${randomTop}px`;
+
+            // Wechsel des Button-Modus
+            isUnsubscribe = !isUnsubscribe;
+            if (isUnsubscribe) {
+                button.textContent = 'Unsubscribe';
+                button.classList.remove('dismiss');
+            } else {
+                button.textContent = 'Dismiss';
+                button.classList.add('dismiss');
+            }
+
+            // Nächste Bewegung nach einer zufälligen Zeit (500ms bis 2000ms)
+            const nextMove = Math.floor(Math.random() * 1500) + 500;
+            setTimeout(moveButton, nextMove);
+        }
+
+        // Initiale Positionierung des Buttons
+        moveButton();
+
+        // Funktion zum zufälligen Erzeugen von Dialogfenstern an der Cursorposition
+        function createRandomDialog() {
+            const dialog = document.createElement('div');
+            dialog.classList.add('dialog');
+
+            // Inhalt des Dialogs
+            const message = document.createElement('p');
+            message.textContent = 'Are you really sure?';
+            dialog.appendChild(message);
+
+            // Yes-Button
+            const yesButton = document.createElement('button');
+            yesButton.textContent = 'Yes';
+            dialog.appendChild(yesButton);
+
+            // No-Button
+            const noButton = document.createElement('button');
+            noButton.textContent = 'No';
+            noButton.classList.add('no-button');
+            dialog.appendChild(noButton);
+
+            // Position des Dialogs an der aktuellen Cursorposition
+            const padding = 20; // Abstand vom Rand
+
+            // Berechne die Position, um das Dialogfenster an der Cursorposition zu platzieren
+            let posX = lastCursorPos.x;
+            let posY = lastCursorPos.y;
+
+            // Geschätzte Größe des Dialogs (kann angepasst werden)
+            const dialogWidth = 220; // Angepasste Breite
+            const dialogHeight = 100; // Angepasste Höhe
+
+            // Sicherstellen, dass das Dialogfenster nicht außerhalb des Bildschirms erscheint
+            if (posX + dialogWidth / 2 > window.innerWidth) {
+                posX = window.innerWidth - dialogWidth / 2 - 10;
+            }
+            if (posY + dialogHeight / 2 > window.innerHeight) {
+                posY = window.innerHeight - dialogHeight / 2 - 10;
+            }
+
+            dialog.style.left = `${posX}px`;
+            dialog.style.top = `${posY}px`;
+
+            // Füge das Dialogfenster zum Body hinzu
+            document.body.appendChild(dialog);
+
+            // Zeige das Dialogfenster an
+            setTimeout(() => {
+                dialog.classList.add('visible');
+            }, 100); // Kurze Verzögerung für CSS-Transition
+
+            // Event Listener für den Yes-Button
+            yesButton.addEventListener('click', function() {
+                dialog.classList.remove('visible');
+                // Entferne das Dialogfenster nach der Transition
+                setTimeout(() => {
+                    dialog.remove();
+                }, 300); // Muss mit CSS-Transition übereinstimmen
+            });
+
+            // Event Listener für den No-Button
+            noButton.addEventListener('click', function() {
+                // Weiterleitung zu start.html
+                window.location.href = 'start.html';
+            });
+
+            // Optional: Klick außerhalb des Dialogs schließt dieses
+            dialog.addEventListener('click', function(event) {
+                if (event.target === dialog) {
+                    dialog.classList.remove('visible');
+                    setTimeout(() => {
+                        dialog.remove();
+                    }, 300);
+                }
+            });
+
+            // Nächster Dialog nach zufälligem Intervall (500ms bis 2000ms)
+            const nextDialog = Math.floor(Math.random() * 1500) + 500;
+            setTimeout(createRandomDialog, nextDialog);
+        }
+
+        // Initiales Starten der Dialogerzeugung
+        createRandomDialog();
+
+        // Event Listener für das Klicken auf den Unsubscribe/Dismiss-Button
+        toggleButton.addEventListener('click', function(event) {
+            if (isUnsubscribe) {
+                // Wenn es ein Unsubscribe-Button ist, leitet zu lvl10.html weiter
+                window.location.href = 'lvl10.html';
+            } else {
+                // Wenn es ein Dismiss-Button ist, leitet zu start.html weiter
+                window.location.href = 'start.html';
+            }
+        });
+
+        // Optional: Anpassungen bei Fenstergrößenänderung
+        window.addEventListener('resize', function() {
+            // Optional: Passen Sie die Position des Buttons oder Dialogs an
+        });
+    </script>
+
+</body>
+</html>

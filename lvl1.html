@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unsubscribe Game - Level 1</title>
+    <style>
+        body {
+            /* Hintergrundbild */
+            background-image: url('bg01.gif');
+            background-size: cover; /* Bild soll den gesamten Hintergrund ausfüllen */
+            background-repeat: no-repeat;
+            background-position: center center;
+            display: flex;
+            height: 100vh;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            margin: 0; /* Entfernt Standardabstände */
+            position: relative; /* Für den Musik-Controller */
+            color: #FFFFFF; /* Schriftfarbe auf Weiß setzen */
+        }
+
+        /* Animation für das Pop-up */
+        @keyframes popup {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            80% {
+                transform: scale(1.05);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .window {
+            background-color: rgba(255, 255, 255, 0.9); /* Leicht transparent für besseren Kontrast */
+            border-radius: 15px;
+            /* Verstärkter Schlagschatten */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            width: 300px;
+            padding: 20px;
+            animation: popup 0.5s ease-out forwards;
+            position: relative; /* Für das Toggle-Button */
+        }
+
+        .header {
+            text-align: center;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+            position: relative; /* Ermöglicht die absolute Positionierung des Buttons */
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 8px 35px 8px 10px; /* Platz für den Button rechts */
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            /* Sicherstellen, dass der Text auswählbar ist */
+            user-select: text;
+            color: #000; /* Textfarbe auf Schwarz setzen */
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #007BFF;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+
+        /* Styling für den Show/Hide Password Button */
+        .toggle-password-btn {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #555;
+            cursor: pointer;
+            font-size: 0.9em;
+            padding: 0;
+        }
+
+        .toggle-password-btn:focus {
+            outline: none;
+        }
+
+        .unsubscribe-button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF; /* Grau als deaktivierter Zustand */
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .unsubscribe-button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Styling für den Musik-Controller */
+        .music-controller {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .music-controller button {
+            background-color: #007BFF;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            margin-left: 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .music-controller button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Responsives Design */
+        @media (max-width: 600px) {
+            .window {
+                width: 90%;
+                padding: 15px;
+            }
+
+            .music-controller {
+                top: 10px;
+                right: 10px;
+                padding: 3px 7px;
+            }
+
+            .music-controller button {
+                padding: 3px 7px;
+                font-size: 0.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Musik-Controller -->
+    <div class="music-controller">
+        <span>🎵 Musik</span>
+        <button id="music-toggle">Pause</button>
+    </div>
+
+    <div class="window">
+        <div class="header">We hate to see you go</div>
+        <div class="input-group">
+            <label for="username">Name:</label>
+            <input type="text" id="username" name="username" value="kiosk">
+        </div>
+        <div class="input-group">
+            <label for="password">Passwort:</label>
+            <input type="password" id="password" name="password" value="123456">
+            <button type="button" class="toggle-password-btn" id="toggle-password-btn">Anzeigen</button>
+        </div>
+        <button class="unsubscribe-button" onclick="goToNextLevel()">Unsubscribe</button>
+    </div>
+
+    <!-- Hintergrundmusik -->
+    <audio id="bgm" src="bgm01.mp3" loop></audio>
+
+    <script>
+        // Funktion zur Weiterleitung zur nächsten Ebene
+        function goToNextLevel() {
+            window.location.href = 'lvl2.html';
+        }
+
+        // Hintergrundmusik automatisch abspielen (abhängig vom Browser)
+        window.addEventListener('load', function() {
+            const bgm = document.getElementById('bgm');
+            bgm.play().catch(function(error) {
+                // Autoplay wurde blockiert, Musik kann durch Benutzeraktion gestartet werden
+                console.log('Autoplay blockiert:', error);
+            });
+        });
+
+        // Musik-Controller
+        const musicToggleButton = document.getElementById('music-toggle');
+        const bgm = document.getElementById('bgm');
+        let isPlaying = true;
+
+        musicToggleButton.addEventListener('click', function() {
+            if (isPlaying) {
+                bgm.pause();
+                musicToggleButton.textContent = 'Play';
+            } else {
+                bgm.play();
+                musicToggleButton.textContent = 'Pause';
+            }
+            isPlaying = !isPlaying;
+        });
+
+        // Show/Hide Password Functionality
+        const togglePasswordBtn = document.getElementById('toggle-password-btn');
+        const passwordInput = document.getElementById('password');
+
+        togglePasswordBtn.addEventListener('click', function() {
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                togglePasswordBtn.textContent = "Verbergen";
+            } else {
+                passwordInput.type = "password";
+                togglePasswordBtn.textContent = "Anzeigen";
+            }
+        });
+    </script>
+
+</body>
+</html>

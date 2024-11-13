@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unsubscribe Game - Level 19</title>
+    <style>
+        body {
+            /* Hintergrundbild */
+            background-image: url('bg06.gif'); /* Stelle sicher, dass bg06.gif vorhanden ist */
+            background-size: cover; /* Ganzes Hintergrundbild abdecken */
+            background-repeat: no-repeat;
+            background-position: center center;
+            margin: 0;
+            overflow: hidden; /* Verhindert Scrollen */
+            cursor: none; /* Versteckt den Standardcursor */
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+        }
+
+        /* Musik-Controller */
+        .music-controller {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 1001; /* Über dem Canvas */
+        }
+
+        .music-controller button {
+            background-color: #007BFF;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            margin-left: 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .music-controller button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Canvas für die Mausspur */
+        #mouse-trail {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Klicks passieren hinter dem Canvas */
+            z-index: 1000; /* Unter dem Musik-Controller und Cursor */
+        }
+
+        /* Benutzerdefinierter Cursor */
+        #custom-cursor {
+            position: absolute;
+            width: 64px; /* 4x Standardgröße (16px -> 64px) */
+            height: 64px;
+            pointer-events: none; /* Klicks passieren hinter dem Cursor */
+            transform: translate(-50%, -50%);
+            z-index: 1002; /* Über dem Canvas */
+            transition: width 0.5s, height 0.5s; /* Sanfte Übergänge beim Wachsen */
+        }
+
+        /* Box-Stile */
+        .box {
+            position: absolute;
+            width: 120px; /* Doppelt so breit wie vorher (60px -> 120px) */
+            height: 60px; /* Beibehaltung der Höhe */
+            background-color: red; /* Rote Dismiss-Boxen */
+            border: 2px solid #8B0000; /* Dunklerer Rand */
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+            user-select: none;
+            z-index: 500;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .unsubscribe-box {
+            background-color: blue; /* Blaue Unsubscribe-Box */
+            border: 2px solid #00008B; /* Dunklerer Rand */
+            width: 160px; /* Angepasst für größere Box */
+            height: 80px; /* Angepasst für größere Box */
+            font-size: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            #custom-cursor {
+                width: 48px; /* Anpassung für kleinere Bildschirme */
+                height: 48px;
+            }
+
+            .box {
+                width: 80px; /* Angepasst für kleinere Bildschirme */
+                height: 40px;
+                font-size: 12px;
+            }
+
+            .unsubscribe-box {
+                width: 120px;
+                height: 60px;
+                font-size: 14px;
+            }
+
+            .music-controller button {
+                padding: 4px 8px;
+                margin-left: 8px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Musik-Controller -->
+    <div class="music-controller">
+        <span>🎵 Musik</span>
+        <button id="music-toggle">Pause</button>
+    </div>
+
+    <!-- Canvas für die Mausspur -->
+    <canvas id="mouse-trail"></canvas>
+
+    <!-- Benutzerdefinierter Cursor -->
+    <img src="cursor.png" alt="Cursor" id="custom-cursor">
+
+    <!-- Hintergrundmusik -->
+    <audio id="bgm" src="bgm02.mp3" loop></audio>
+
+    <script>
+        // Referenzen zu DOM-Elementen
+        const musicToggleButton = document.getElementById('music-toggle');
+        const bgm = document.getElementById('bgm');
+        const customCursor = document.getElementById('custom-cursor');
+        const mouseTrailCanvas = document.getElementById('mouse-trail');
+        const ctx = mouseTrailCanvas.getContext('2d');
+
+        // Lade das Cursor-Bild für den Trail
+        const trailImage = new Image();
+        trailImage.src = 'cursor.png'; // Stelle sicher, dass cursor.png vorhanden ist
+
+        // Setze die Größe des Canvas auf die Fenstergröße
+        function resizeCanvas() {
+            mouseTrailCanvas.width = window.innerWidth;
+            mouseTrailCanvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Initiale Musik starten
+        window.addEventListener('load', function() {
+            bgm.play().catch(function(error) {
+                // Autoplay wurde blockiert
+                console.log('Autoplay blockiert:', error);
+            });
+        });
+
+        // Musik-Controller Funktionalität
+        let isPlaying = true;
+        musicToggleButton.addEventListener('click', function() {
+            if (isPlaying) {
+                bgm.pause();
+                musicToggleButton.textContent = 'Play';
+            } else {
+                bgm.play();
+                musicToggleButton.textContent = 'Pause';
+            }
+            isPlaying = !isPlaying;
+        });
+
+        // Variablen für Cursor-Größe-Änderung
+        let cursorGrown = false;
+
+        // Array für die Mausspur-Punkte
+        const trailPoints = [];
+        const trailDuration = 6000; // 6 Sekunden in Millisekunden
+
+        // Benutzerdefinierten Cursor bewegen mit leichtem Wackel-Effekt und Trail
+        document.addEventListener('mousemove', function(e) {
+            const mouseX = e.clientX;
+            const mouseY = e.clientY;
+            const wobbleAmplitude = 5; // Amplitude des Wackelns in Pixeln
+            const wobbleFrequency = 0.005; // Frequenz des Wackelns
+
+            // Berechne den Wackel-Effekt basierend auf der aktuellen Zeit
+            const wobbleOffsetX = wobbleAmplitude * Math.sin(Date.now() * wobbleFrequency);
+            const wobbleOffsetY = wobbleAmplitude * Math.cos(Date.now() * wobbleFrequency);
+
+            // Aktualisiere die Position des Cursors mit Wackel-Effekt
+            customCursor.style.left = `${mouseX + wobbleOffsetX}px`;
+            customCursor.style.top = `${mouseY + wobbleOffsetY}px`;
+
+            // Speichere die aktuelle Position für den Trail
+            trailPoints.push({
+                x: mouseX + wobbleOffsetX,
+                y: mouseY + wobbleOffsetY,
+                time: Date.now()
+            });
+
+            // Überprüfe, ob der Cursor die Bildschirmränder berührt
+            const cursorRect = customCursor.getBoundingClientRect();
+            if (
+                cursorRect.left <= 0 ||
+                cursorRect.top <= 0 ||
+                cursorRect.right >= window.innerWidth ||
+                cursorRect.bottom >= window.innerHeight
+            ) {
+                window.location.href = 'lvl19.html'; // Weiterleitung bei Berührung der Ränder
+            }
+        });
+
+        // Touch-Unterstützung für den Cursor (optional)
+        document.addEventListener('touchmove', function(e) {
+            const touch = e.touches[0];
+            const touchX = touch.clientX;
+            const touchY = touch.clientY;
+            const wobbleAmplitude = 5; // Amplitude des Wackelns in Pixeln
+            const wobbleFrequency = 0.005; // Frequenz des Wackelns
+
+            // Berechne den Wackel-Effekt basierend auf der aktuellen Zeit
+            const wobbleOffsetX = wobbleAmplitude * Math.sin(Date.now() * wobbleFrequency);
+            const wobbleOffsetY = wobbleAmplitude * Math.cos(Date.now() * wobbleFrequency);
+
+            // Aktualisiere die Position des Cursors mit Wackel-Effekt
+            customCursor.style.left = `${touchX + wobbleOffsetX}px`;
+            customCursor.style.top = `${touchY + wobbleOffsetY}px`;
+
+            // Speichere die aktuelle Position für den Trail
+            trailPoints.push({
+                x: touchX + wobbleOffsetX,
+                y: touchY + wobbleOffsetY,
+                time: Date.now()
+            });
+
+            // Überprüfe, ob der Cursor die Bildschirmränder berührt
+            const cursorRect = customCursor.getBoundingClientRect();
+            if (
+                cursorRect.left <= 0 ||
+                cursorRect.top <= 0 ||
+                cursorRect.right >= window.innerWidth ||
+                cursorRect.bottom >= window.innerHeight
+            ) {
+                window.location.href = 'lvl19.html'; // Weiterleitung bei Berührung der Ränder
+            }
+
+            e.preventDefault(); // Verhindert das Scrollen beim Berühren
+        }, { passive: false });
+
+        // Funktion zur Vergrößerung des Cursors nach 100 Dismiss-Boxen
+        function checkAndGrowCursor() {
+            if (boxCount >= 100 && !cursorGrown) {
+                // Doppelte Größe des Cursors
+                customCursor.style.width = '128px';
+                customCursor.style.height = '128px';
+                cursorGrown = true;
+            }
+        }
+
+        // Box-Management
+        const boxes = [];
+        let boxCount = 0;
+        const maxBoxes = 400; // Erhöhte Anzahl auf 400
+        let unsubscribeBoxSpawned = false;
+        let spawnProbability = 0.04; // Erhöhte Anfangswahrscheinlichkeit für mehr Boxen
+        const spawnIncreaseInterval = 8000; // Alle 8 Sekunden
+        const spawnIncreaseAmount = 0.005; // Erhöhung der Wahrscheinlichkeit
+
+        // Box-Klassen
+        class Box {
+            constructor(x, y, speed, isUnsubscribe = false) {
+                this.x = x;
+                this.y = y;
+                this.speed = speed;
+                this.isUnsubscribe = isUnsubscribe;
+                this.element = document.createElement('div');
+                this.element.classList.add('box');
+                if (isUnsubscribe) {
+                    this.element.classList.add('unsubscribe-box');
+                    this.element.textContent = 'Unsubscribe';
+                    // Event Listener für Unsubscribe-Box
+                    this.element.addEventListener('click', () => {
+                        window.location.href = 'lvl21.html';
+                    });
+                } else {
+                    this.element.textContent = 'Dismiss';
+                }
+                this.element.style.left = `${this.x}px`;
+                this.element.style.top = `${this.y}px`;
+                document.body.appendChild(this.element);
+            }
+
+            update(deltaTime) {
+                this.y += this.speed * deltaTime;
+                this.element.style.top = `${this.y}px`;
+            }
+
+            remove() {
+                document.body.removeChild(this.element);
+            }
+        }
+
+        // Spawn-Box-Funktion
+        function spawnBox() {
+            const x = Math.random() * (window.innerWidth - 120); // Doppelt so breit: 120px
+            const y = -80; // Start oberhalb des Bildschirms
+            const speed = 200 + Math.random() * 100; // Geschwindigkeit zwischen 200 und 300 px/s
+            const box = new Box(x, y, speed);
+            boxes.push(box);
+            boxCount++;
+
+            // Prüfe, ob der Cursor wachsen soll
+            checkAndGrowCursor();
+
+            // Prüfe, ob die maximale Anzahl erreicht ist und spawne ggf. die Unsubscribe-Box
+            if (boxCount >= maxBoxes && !unsubscribeBoxSpawned) {
+                spawnUnsubscribeBox();
+                unsubscribeBoxSpawned = true;
+            }
+        }
+
+        // Spawn Unsubscribe-Box
+        function spawnUnsubscribeBox() {
+            const x = Math.random() * (window.innerWidth - 160); // Blaue Box-Größe: 160px
+            const y = -100; // Start oberhalb des Bildschirms
+            const speed = 150 + Math.random() * 100; // Geschwindigkeit zwischen 150 und 250 px/s
+            const unsubscribeBox = new Box(x, y, speed, true);
+            boxes.push(unsubscribeBox);
+        }
+
+        // Game Loop
+        let lastTimeGameLoop = performance.now();
+        function gameLoop(currentTime) {
+            const deltaTime = (currentTime - lastTimeGameLoop) / 1000; // in Sekunden
+            lastTimeGameLoop = currentTime;
+
+            // Spawn neue Boxen basierend auf der aktuellen Wahrscheinlichkeit
+            if (Math.random() < spawnProbability) { // Wahrscheinlichkeit pro Frame
+                spawnBox();
+            }
+
+            // Update Boxen
+            for (let i = boxes.length - 1; i >= 0; i--) {
+                const box = boxes[i];
+                box.update(deltaTime);
+
+                // Collision Detection mit Cursor
+                if (!box.isUnsubscribe && checkCollision(customCursor, box.element)) {
+                    window.location.href = 'lvl19.html';
+                }
+
+                // Entferne Boxen, die den Bildschirm verlassen haben
+                if (box.y > window.innerHeight) {
+                    box.remove();
+                    boxes.splice(i, 1);
+                }
+            }
+
+            // Aktualisiere und zeichne die Mausspur
+            updateMouseTrail();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start des Game Loops
+        requestAnimationFrame(gameLoop);
+
+        // Kollisionsprüfung zwischen zwei Elementen
+        function checkCollision(cursor, box) {
+            const cursorRect = cursor.getBoundingClientRect();
+            const boxRect = box.getBoundingClientRect();
+
+            return !(
+                cursorRect.top > boxRect.bottom ||
+                cursorRect.bottom < boxRect.top ||
+                cursorRect.left > boxRect.right ||
+                cursorRect.right < boxRect.left
+            );
+        }
+
+        // Erhöhung der Spawn-Wahrscheinlichkeit über die Zeit
+        setInterval(() => {
+            spawnProbability += spawnIncreaseAmount;
+            if (spawnProbability > 0.15) { // Maximal Wahrscheinlichkeit
+                spawnProbability = 0.15;
+            }
+            console.log(`Spawn Probability erhöht auf: ${spawnProbability.toFixed(3)}`);
+        }, spawnIncreaseInterval);
+
+        // Funktion zum Aktualisieren und Zeichnen der Mausspur
+        function updateMouseTrail() {
+            const now = Date.now();
+
+            // Entferne Punkte, die älter als trailDuration sind
+            while (trailPoints.length > 0 && (now - trailPoints[0].time) > trailDuration) {
+                trailPoints.shift();
+            }
+
+            // Leere das Canvas
+            ctx.clearRect(0, 0, mouseTrailCanvas.width, mouseTrailCanvas.height);
+
+            // Zeichne die verbleibenden Punkte
+            for (let point of trailPoints) {
+                const age = now - point.time;
+                const opacity = 1 - (age / trailDuration); // Verblassende Transparenz
+
+                if (trailImage.complete) { // Stelle sicher, dass das Bild geladen ist
+                    ctx.globalAlpha = opacity;
+
+                    // Skalierung der Trail-Images basierend auf Cursor-Größe
+                    const scale = (parseFloat(getComputedStyle(customCursor).width) / 64) * 0.25; // Halb so groß
+
+                    const imageWidth = trailImage.width * scale;
+                    const imageHeight = trailImage.height * scale;
+
+                    ctx.drawImage(trailImage, point.x - imageWidth / 2, point.y - imageHeight / 2, imageWidth, imageHeight);
+
+                    ctx.globalAlpha = 1.0; // Reset opacity
+                }
+            }
+        }
+
+        // Stelle sicher, dass das Trail-Bild geladen ist, bevor es gezeichnet wird
+        trailImage.onload = function() {
+            console.log('Trail-Bild geladen.');
+        }
+
+        // Responsive Anpassungen bei Fenstergröße
+        window.addEventListener('resize', function() {
+            resizeCanvas();
+        });
+    </script>
+
+</body>
+</html>

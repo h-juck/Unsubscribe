@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Unsubscribe Game - Level 15</title>
+    <style>
+        body {
+            /* Hintergrundbild */
+            background-image: url('bg04.gif'); /* Stelle sicher, dass bg04.gif im selben Verzeichnis liegt */
+            background-size: cover; /* Ganzes Hintergrundbild abdecken */
+            background-repeat: no-repeat;
+            background-position: center center;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: #FFFFFF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+            overflow: hidden;
+            cursor: default; /* Standard-Mauszeiger anzeigen */
+        }
+
+        /* Grid Container */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 800px;
+            z-index: 1001; /* Über den Cursor-Elementen */
+            position: relative;
+            opacity: 0; /* Initial unsichtbar */
+            transition: opacity 1s ease; /* Fade-In-Effekt */
+        }
+
+        .grid-container.show {
+            opacity: 1; /* Sichtbar */
+        }
+
+        /* Styling für die Buttons */
+        .unsubscribe-button {
+            padding: 15px;
+            background-color: #007BFF; /* Blau */
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, opacity 1s ease;
+            text-align: center;
+        }
+
+        .unsubscribe-button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Falsch geschriebene Buttons */
+        .unsubscribe-button.wrong {
+            /* Keine zusätzlichen Styles, da sie funktionslos sind */
+        }
+
+        /* Richtiger Button */
+        .unsubscribe-button.correct {
+            /* Keine zusätzlichen Styles, da der richtige Button bereits gestylt ist */
+        }
+
+        /* Nach 7 Sekunden: Transformation zu Dismiss-Buttons */
+        .unsubscribe-button.dismiss {
+            background-color: #DC3545; /* Rot */
+            transition: background-color 0.3s ease;
+        }
+
+        /* Musik-Controller */
+        .music-controller {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 1004; /* Über den Cursor-Elementen */
+        }
+
+        .music-controller button {
+            background-color: #007BFF;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            margin-left: 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .music-controller button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Reset-Button Styling */
+        #reset-button {
+            padding: 15px 30px;
+            background-color: #6c757d; /* Grau */
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, opacity 1s ease;
+            text-align: center;
+            margin-top: 20px; /* Abstand zum Grid-Container */
+            display: none; /* Anfangs versteckt */
+            align-self: center; /* Zentriert den Button innerhalb des Containers */
+        }
+
+        #reset-button:hover {
+            background-color: #5a6268;
+        }
+
+        /* Container für Grid und Reset-Button */
+        .buttons-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Zentriert alle Kinder horizontal */
+            width: 100%;
+            max-width: 800px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .unsubscribe-button {
+                padding: 10px;
+                font-size: 0.9em;
+            }
+
+            .music-controller {
+                padding: 3px 8px;
+            }
+
+            .music-controller button {
+                padding: 4px 8px;
+                margin-left: 8px;
+            }
+
+            .grid-container {
+                width: 100%;
+                gap: 10px;
+            }
+
+            #reset-button {
+                padding: 10px 20px;
+                font-size: 0.9em;
+                margin-top: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Musik-Controller -->
+    <div class="music-controller">
+        <span>🎵 Musik</span>
+        <button id="music-toggle">Pause</button>
+    </div>
+
+    <!-- Wrapper Container für Grid und Reset-Button -->
+    <div class="buttons-wrapper">
+        <!-- Grid Container für die Buttons -->
+        <div class="grid-container">
+            <!-- Buttons werden dynamisch mit JavaScript erstellt -->
+        </div>
+
+        <!-- Reset Button -->
+        <button id="reset-button">Reset</button>
+    </div>
+
+    <!-- Hintergrundmusik -->
+    <audio id="bgm" src="bgm01.mp3" loop autoplay></audio>
+
+    <script>
+        // Liste der möglichen falschen Schreibweisen
+        const wrongSpells = [
+            'Unsuscribe', 'Unsubcribe', 'Unsubscribee', 'Unsubscrbe', 
+            'Unsubscribe!', 'Unsubscreibe', 'Unsubscrbe', 'Unsubscribe?', 
+            'Unsubscrib', 'Unsubscribe..', 'Unsubscribe!!!', 'Unsubscribe123'
+        ];
+
+        // Anzahl der Buttons und Grid-Einstellungen
+        const rows = 5;
+        const cols = 5;
+        const totalButtons = rows * cols;
+
+        // Zufällige Auswahl des korrekten Buttons
+        const correctButtonIndex = Math.floor(Math.random() * totalButtons);
+
+        // Funktion zum Erstellen eines Buttons
+        function createButton(index) {
+            const button = document.createElement('button');
+            button.classList.add('unsubscribe-button');
+
+            if (index === correctButtonIndex) {
+                button.classList.add('correct');
+                button.textContent = 'Unsubscribe';
+                button.onclick = () => {
+                    window.location.href = 'lvl16.html';
+                };
+            } else {
+                const wrongSpell = wrongSpells[Math.floor(Math.random() * wrongSpells.length)];
+                button.classList.add('wrong');
+                button.textContent = wrongSpell;
+                // Kein onclick, da funktionslos
+            }
+
+            return button;
+        }
+
+        // Erstellen und Positionieren der Buttons
+        const gridContainer = document.querySelector('.grid-container');
+
+        for (let i = 0; i < totalButtons; i++) {
+            const button = createButton(i);
+            gridContainer.appendChild(button);
+        }
+
+        // Funktion zum Anzeigen der Grid-Buttons nach 4 Sekunden
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                gridContainer.classList.add('show');
+            }, 4000); // 4000 Millisekunden = 4 Sekunden
+
+            // Nach 7 Sekunden die Buttons in Dismiss-Buttons verwandeln und Reset-Button anzeigen
+            setTimeout(() => {
+                const allButtons = document.querySelectorAll('.unsubscribe-button');
+                allButtons.forEach(btn => {
+                    btn.classList.add('dismiss');
+                    btn.textContent = 'Dismiss';
+                    btn.onclick = () => {
+                        window.location.href = 'start.html';
+                    };
+                });
+
+                // Reset-Button anzeigen und Click-Handler hinzufügen
+                const resetButton = document.getElementById('reset-button');
+                resetButton.style.display = 'block'; // Sichtbar machen
+                resetButton.onclick = () => {
+                    window.location.reload(); // Level neu starten
+                };
+            }, 11000); // 4000ms + 7000ms = 11000ms
+        });
+
+        // Musik-Controller
+        const bgm = document.getElementById('bgm');
+        const musicToggle = document.getElementById('music-toggle');
+
+        musicToggle.addEventListener('click', function() {
+            if (bgm.paused) {
+                bgm.play();
+                musicToggle.textContent = 'Pause';
+            } else {
+                bgm.pause();
+                musicToggle.textContent = 'Play';
+            }
+        });
+    </script>
+</body>
+</html>

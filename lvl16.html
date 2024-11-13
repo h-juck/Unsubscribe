@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unsubscribe Game - Level 16</title>
+    <style>
+        body {
+            /* Hintergrundbild */
+            background-image: url('bg05.gif'); /* Stelle sicher, dass bg04.gif im selben Verzeichnis liegt */
+            background-size: cover; /* Deckt den gesamten Hintergrund ab */
+            background-repeat: no-repeat;
+            background-position: center center;
+            margin: 0; /* Entfernt Standardabstände */
+            font-family: Arial, sans-serif;
+            color: #000000; /* Schriftfarbe auf Schwarz setzen */
+            height: 100vh;
+            width: 100vw;
+            position: relative; /* Für den Musik-Controller */
+            overflow: hidden; /* Verhindert Scrollen */
+        }
+
+        /* Styling für den Musik-Controller */
+        .music-controller {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        .music-controller button {
+            background-color: #007BFF;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            margin-left: 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .music-controller button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Container für die Boxen */
+        .container {
+            position: relative;
+            width: 80%;
+            max-width: 600px;
+            margin: 0 auto;
+            height: 80vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Unterste Box (Unsubscribe) */
+        .unsubscribe-box {
+            position: absolute;
+            width: 100%;
+            padding: 20px;
+            background-color: #FFFFFF; /* Weiß */
+            border: 2px solid #007BFF; /* Blauer Rand zur Hervorhebung */
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+            z-index: 1; /* Unter der Dismiss-Box */
+        }
+
+        .unsubscribe-box h2 {
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            color: #000000; /* Schwarz */
+        }
+
+        .unsubscribe-box button {
+            padding: 10px 20px;
+            background-color: #007BFF; /* Blau */
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .unsubscribe-box button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Obere Box (Dismiss) */
+        .dismiss-box {
+            position: absolute;
+            width: 100%;
+            padding: 20px;
+            background-color: #FFFFFF; /* Weiß */
+            border: 2px solid #DC3545; /* Roter Rand zur Hervorhebung */
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            cursor: grab; /* Hinweis, dass die Box beweglich ist */
+            user-select: none; /* Verhindert Textauswahl während des Ziehens */
+            z-index: 2; /* Über der Unsubscribe-Box */
+        }
+
+        .dismiss-box:active {
+            cursor: grabbing;
+        }
+
+        .dismiss-box h2 {
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            color: #000000; /* Schwarz */
+        }
+
+        .dismiss-box button {
+            padding: 10px 20px;
+            background-color: #DC3545; /* Rot */
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .dismiss-box button:hover {
+            background-color: #a71d2a;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .container {
+                width: 95%;
+                height: 70vh;
+            }
+
+            .unsubscribe-box, .dismiss-box {
+                padding: 15px;
+            }
+
+            .unsubscribe-box h2, .dismiss-box h2 {
+                font-size: 1.5em;
+            }
+
+            .unsubscribe-box button, .dismiss-box button {
+                padding: 8px 16px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Musik-Controller -->
+    <div class="music-controller">
+        <span>🎵 Music</span>
+        <button id="music-toggle">Pause</button>
+    </div>
+
+    <!-- Container für die Boxen -->
+    <div class="container">
+        <!-- Unterste Box -->
+        <div class="unsubscribe-box" id="unsubscribe-box">
+            <h2>We hate to see you leave</h2>
+            <button id="unsubscribe-button">Unsubscribe</button>
+        </div>
+
+        <!-- Obere Box -->
+        <div class="dismiss-box" id="dismiss-box">
+            <h2>We really hate to see you go</h2>
+            <button id="dismiss-button">Dismiss</button>
+        </div>
+    </div>
+
+    <!-- Hintergrundmusik -->
+    <audio id="bgm" src="bgm01.mp3" loop></audio>
+
+    <script>
+        // Referenzen zu DOM-Elementen
+        const musicToggleButton = document.getElementById('music-toggle');
+        const bgm = document.getElementById('bgm');
+        const dismissBox = document.getElementById('dismiss-box');
+        const unsubscribeButton = document.getElementById('unsubscribe-button');
+        const dismissButton = document.getElementById('dismiss-button');
+
+        // Startet die Hintergrundmusik automatisch
+        window.addEventListener('load', function() {
+            bgm.play().catch(function(error) {
+                // Autoplay wurde blockiert
+                console.log('Autoplay blocked:', error);
+            });
+        });
+
+        // Musik-Controller Funktionalität
+        let isPlaying = true;
+        musicToggleButton.addEventListener('click', function() {
+            if (isPlaying) {
+                bgm.pause();
+                musicToggleButton.textContent = 'Play';
+            } else {
+                bgm.play();
+                musicToggleButton.textContent = 'Pause';
+            }
+            isPlaying = !isPlaying;
+        });
+
+        // Unsubscribe-Button Klick-Handler
+        unsubscribeButton.addEventListener('click', function() {
+            window.location.href = 'lvl17.html';
+        });
+
+        // Dismiss-Button Klick-Handler
+        dismissButton.addEventListener('click', function() {
+            window.location.href = 'start.html';
+        });
+
+        // Funktionalität zum Ziehen der Dismiss-Box
+        (function() {
+            let isDragging = false;
+            let startX, startY;
+            let initialX, initialY;
+            let currentTranslateX = 0;
+            let currentTranslateY = 0;
+
+            dismissBox.addEventListener('mousedown', dragStart);
+            dismissBox.addEventListener('touchstart', dragStart);
+
+            function dragStart(e) {
+                e.preventDefault();
+                isDragging = true;
+                if (e.type === 'mousedown') {
+                    startX = e.clientX;
+                    startY = e.clientY;
+                } else if (e.type === 'touchstart') {
+                    startX = e.touches[0].clientX;
+                    startY = e.touches[0].clientY;
+                }
+                const rect = dismissBox.getBoundingClientRect();
+                initialX = rect.left;
+                initialY = rect.top;
+
+                document.addEventListener('mousemove', dragging);
+                document.addEventListener('mouseup', dragEnd);
+                document.addEventListener('touchmove', dragging);
+                document.addEventListener('touchend', dragEnd);
+            }
+
+            function dragging(e) {
+                if (!isDragging) return;
+                let currentX, currentY;
+                if (e.type === 'mousemove') {
+                    currentX = e.clientX;
+                    currentY = e.clientY;
+                } else if (e.type === 'touchmove') {
+                    currentX = e.touches[0].clientX;
+                    currentY = e.touches[0].clientY;
+                }
+
+                let deltaX = currentX - startX;
+                let deltaY = currentY - startY;
+
+                currentTranslateX += deltaX;
+                currentTranslateY += deltaY;
+
+                // Begrenzung der Bewegung, damit die Box nicht komplett verschwindet
+                const maxTranslateX = window.innerWidth / 2 - dismissBox.offsetWidth / 2;
+                const maxTranslateY = window.innerHeight / 2 - dismissBox.offsetHeight / 2;
+
+                currentTranslateX = Math.min(Math.max(currentTranslateX, -maxTranslateX), maxTranslateX);
+                currentTranslateY = Math.min(Math.max(currentTranslateY, -maxTranslateY), maxTranslateY);
+
+                dismissBox.style.transform = `translate(${currentTranslateX}px, ${currentTranslateY}px)`;
+
+                // Update für das nächste Dragging
+                startX = currentX;
+                startY = currentY;
+            }
+
+            function dragEnd(e) {
+                if (!isDragging) return;
+                isDragging = false;
+
+                // Entferne die Event Listener
+                document.removeEventListener('mousemove', dragging);
+                document.removeEventListener('mouseup', dragEnd);
+                document.removeEventListener('touchmove', dragging);
+                document.removeEventListener('touchend', dragEnd);
+            }
+        })();
+    </script>
+
+</body>
+</html>

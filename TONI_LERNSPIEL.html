@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Lernspiel - Buchstaben nachbauen</title>
+    <style>
+        body {
+            background-image: url('bg04.gif'); /* Verwende bg04.gif als Hintergrund */
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center center;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: #FFFFFF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+
+        .game-container {
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 800px;
+        }
+
+        #current-word {
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            letter-spacing: 10px;
+        }
+
+        .letter-slot {
+            display: inline-block;
+            width: 50px;
+            height: 60px;
+            margin: 5px;
+            border-bottom: 3px solid #FFFFFF;
+            font-size: 2.5em;
+            vertical-align: middle;
+        }
+
+        .letter-boxes {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .letter-box {
+            width: 60px;
+            height: 60px;
+            margin: 10px;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 2em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
+        }
+
+        .letter-box:hover {
+            background-color: #0056b3;
+        }
+
+        .letter-box.disabled {
+            background-color: #6c757d; /* Grau für deaktivierte Buchstaben */
+            cursor: not-allowed;
+        }
+
+        #selected-letters {
+            margin-bottom: 30px;
+            min-height: 60px;
+        }
+
+        .selected-letter {
+            display: inline-block;
+            width: 50px;
+            height: 60px;
+            margin: 5px;
+            background-color: #28a745;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 2.5em;
+            line-height: 60px;
+            vertical-align: middle;
+        }
+
+        #next-word-button {
+            padding: 15px 30px;
+            background-color: #DC3545;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: none; /* Anfangs versteckt */
+        }
+
+        #next-word-button:hover {
+            background-color: #C82333;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .game-container {
+                padding: 20px;
+                width: 95%;
+            }
+
+            #current-word {
+                font-size: 2em;
+                letter-spacing: 5px;
+            }
+
+            .letter-box, .selected-letter, .letter-slot {
+                width: 40px;
+                height: 50px;
+                font-size: 1.5em;
+            }
+
+            #next-word-button {
+                padding: 10px 20px;
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 id="current-word">WORD</h1> <!-- Zu bauendes Wort -->
+        <div id="selected-letters">
+            <!-- Ausgewählte Buchstaben erscheinen hier -->
+        </div>
+        <div class="letter-boxes" id="letter-boxes">
+            <!-- Buchstabenkästen werden hier generiert -->
+        </div>
+        <button id="next-word-button">Nächstes Wort</button>
+    </div>
+
+    <audio id="bgm" src="bgm01.mp3" loop autoplay></audio> <!-- Hintergrundmusik -->
+
+    <script>
+        // Liste der 30 einfachen deutschen Wörter
+        const wordsList = [
+            "LAMPE", "LAMP", "MAHL", "PALM", "SPAM", "STAR", "SEIL", "MEHL",
+            "PATE", "TEIL", "SLAM", "RAMP", "STAMP", "PLANT", "SLAP", "SPAR",
+            "TRAM", "TRAP", "BEAM", "MEAL", "SALT", "TEAM", "LAME", "LEAP",
+            "PEAT", "EAST", "TEAL", "MEAN", "SAME", "MEAT", "PEAT"
+        ];
+
+        // Funktion zum Mischen eines Arrays (Fisher-Yates Algorithmus)
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--){
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        let currentWordIndex = 0;
+        let currentWord = "";
+        let shuffledLetters = [];
+        let selectedLetters = [];
+
+        const currentWordElement = document.getElementById('current-word');
+        const letterBoxesContainer = document.getElementById('letter-boxes');
+        const selectedLettersContainer = document.getElementById('selected-letters');
+        const nextWordButton = document.getElementById('next-word-button');
+        const bgm = document.getElementById('bgm');
+
+        // Funktion zum Laden des nächsten Wortes
+        function loadNextWord() {
+            if (currentWordIndex >= wordsList.length) {
+                alert("Glückwunsch! Du hast alle Wörter abgeschlossen.");
+                currentWordIndex = 0; // Reset für einen Neustart
+            }
+            currentWord = wordsList[currentWordIndex].toUpperCase();
+            currentWordIndex++;
+
+            // Anzeige des aktuellen Wortes
+            displayCurrentWord();
+
+            // Generiere die Buchstabenkästen
+            generateLetterBoxes();
+
+            // Leeren der ausgewählten Buchstaben
+            selectedLetters = [];
+            selectedLettersContainer.innerHTML = "";
+
+            // Verstecke den "Nächstes Wort" Button
+            nextWordButton.style.display = 'none';
+        }
+
+        // Funktion zur Anzeige des aktuellen Wortes
+        function displayCurrentWord() {
+            currentWordElement.textContent = currentWord;
+        }
+
+        // Funktion zur Generierung der Buchstabenkästen mit zusätzlichen Buchstaben
+        function generateLetterBoxes() {
+            letterBoxesContainer.innerHTML = "";
+            selectedLetters = [];
+
+            // Buchstaben des aktuellen Wortes
+            const wordLetters = currentWord.split('');
+
+            // Buchstabensatz
+            const letterSet = ['L', 'S', 'A', 'M', 'O', 'I', 'N', 'R', 'P', 'T', 'B', 'E'];
+
+            // Bestimme die verfügbaren Buchstaben für zusätzliche Buchstaben
+            const availableLetters = letterSet.filter(letter => !wordLetters.includes(letter));
+
+            // Anzahl der zusätzlichen Buchstaben (z.B. 4 oder so, abhängig von der Wortlänge)
+            const extraLettersCount = Math.min(4, availableLetters.length);
+
+            // Wähle zufällige zusätzliche Buchstaben
+            const extraLetters = shuffle(availableLetters).slice(0, extraLettersCount);
+
+            // Gesamte Buchstaben für die Kästen: Wortbuchstaben + zusätzliche Buchstaben
+            const totalLetters = shuffle(wordLetters.concat(extraLetters));
+
+            // Erstelle die Buchstabenkästen
+            totalLetters.forEach((letter, index) => {
+                const button = document.createElement('button');
+                button.classList.add('letter-box');
+                button.textContent = letter;
+                button.dataset.letter = letter;
+                button.dataset.index = index;
+                button.addEventListener('click', handleLetterClick);
+                letterBoxesContainer.appendChild(button);
+            });
+        }
+
+        // Handler für das Klicken auf einen Buchstabenkasten
+        function handleLetterClick(event) {
+            const button = event.target;
+            const letter = button.dataset.letter;
+
+            // Finde die nächste freie Position im ausgewählten Wort
+            const letterSlots = selectedLetters.length;
+            if (letter === currentWord[letterSlots]) {
+                // Füge den Buchstaben hinzu
+                selectedLetters.push(letter);
+                const selectedLetterDiv = document.createElement('div');
+                selectedLetterDiv.classList.add('selected-letter');
+                selectedLetterDiv.textContent = letter;
+                selectedLettersContainer.appendChild(selectedLetterDiv);
+
+                // Deaktiviere den Buchstabenkasten
+                button.classList.add('disabled');
+                button.disabled = true;
+
+                // Überprüfe, ob das Wort vollständig ist
+                if (selectedLetters.length === currentWord.length) {
+                    // Zeige den "Nächstes Wort" Button an
+                    nextWordButton.style.display = 'inline-block';
+                }
+            } else {
+                // Optional: Feedback bei falschem Buchstaben
+                // Für Erstklässler ist eine sanfte Rückmeldung besser als ein Alert
+                button.style.backgroundColor = '#FF6347'; // Tomatenrot für Fehler
+                setTimeout(() => {
+                    button.style.backgroundColor = '#007BFF'; // Zurück zur ursprünglichen Farbe
+                }, 500);
+            }
+        }
+
+        // Event Listener für den "Nächstes Wort" Button
+        nextWordButton.addEventListener('click', loadNextWord);
+
+        // Initiales Laden des ersten Wortes
+        window.onload = loadNextWord;
+    </script>
+</body>
+</html>

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Unsubscribe Game - Level 12</title>
+    <style>
+        body {
+            /* Hintergrundbild */
+            background-image: url('bg04.gif'); /* Geändert von bg03.gif zu bg04.gif */
+            background-size: cover; /* Ganzes Hintergrundbild abdecken */
+            background-repeat: no-repeat;
+            background-position: center center;
+            margin: 0; /* Standard-Margen entfernen */
+            font-family: Arial, sans-serif;
+            color: #FFFFFF; /* Textfarbe weiß */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            position: relative; /* Für den Musik-Controller */
+            overflow: hidden; /* Scrollen verhindern */
+        }
+
+        /* Styling für den Musik-Controller */
+        .music-controller {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        .music-controller button {
+            background-color: #007BFF;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            margin-left: 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .music-controller button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Styling für den Container */
+        .container {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            width: 80%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative; /* Für den Button */
+        }
+
+        .container h1 {
+            margin-bottom: 20px;
+            font-size: 2em;
+            color: #FFFFFF; /* Weiß */
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* Styling für den Unsubscribe/Dismiss-Button */
+        #unsubscribe-button {
+            padding: 15px 30px;
+            background-color: #6c757d; /* Grau */
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            display: block; /* Sichtbar von Anfang an */
+            margin-top: 20px; /* Abstand zum Text */
+            z-index: 1000; /* Sicherstellen, dass der Button oben ist */
+        }
+
+        #unsubscribe-button:hover {
+            background-color: #5a6268;
+        }
+
+        /* Styling für den Dismiss-Button (nach 3 Sekunden) */
+        #unsubscribe-button.dismiss {
+            background-color: #DC3545 !important; /* Rot */
+        }
+
+        #unsubscribe-button.dismiss:hover {
+            background-color: #C82333 !important;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                width: 90%;
+            }
+
+            .container h1 {
+                font-size: 1.5em;
+            }
+
+            #unsubscribe-button {
+                padding: 10px 20px;
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Musik-Controller -->
+    <div class="music-controller">
+        <span>🎵 Musik</span>
+        <button id="music-toggle">Pause</button>
+    </div>
+
+    <!-- Container mit Überschrift und Video -->
+    <div class="container">
+        <h1>Watch this message from our sponsor</h1> <!-- Überschrift geändert -->
+        <video id="video" width="800" height="450" autoplay>
+            <source id="video-source" src="vid01.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <button id="unsubscribe-button">Unsubscribe</button> <!-- Button initial sichtbar -->
+    </div>
+
+    <!-- Hintergrundmusik -->
+    <audio id="bgm" src="bgm01.mp3" loop autoplay></audio> <!-- Autoplay hinzugefügt -->
+
+    <script>
+        // Referenzen zu DOM-Elementen
+        const videoSource = document.getElementById('video-source');
+        const unsubscribeButton = document.getElementById('unsubscribe-button');
+        const bgm = document.getElementById('bgm');
+        const musicToggle = document.getElementById('music-toggle');
+
+        // Funktion zum zufälligen Auswählen eines Videos
+        function getRandomVideo() {
+            const videos = ['vid01.mp4', 'vid02.mp4', 'vid03.mp4'];
+            return videos[Math.floor(Math.random() * videos.length)];
+        }
+
+        // Video-Quelle zufällig ändern und abspielen
+        function changeVideo() {
+            const randomVideo = getRandomVideo();
+            videoSource.src = randomVideo;
+            const video = document.getElementById('video');
+            video.load();
+            video.play();
+        }
+
+        // Beim Laden der Seite Video ändern
+        window.onload = function() {
+            changeVideo();
+
+            // Initialer Button-Status
+            unsubscribeButton.textContent = 'Unsubscribe';
+            unsubscribeButton.style.backgroundColor = '#6c757d'; // Grau
+            unsubscribeButton.onclick = function() {
+                window.location.href = 'lvl14.html'; // Initiale Weiterleitung
+            };
+
+            // Nach 3 Sekunden den Button ändern
+            setTimeout(function(){
+                unsubscribeButton.textContent = 'Dismiss';
+                unsubscribeButton.classList.add('dismiss'); // Für rote Farbe
+                unsubscribeButton.onclick = function() {
+                    window.location.href = 'start.html'; // Neue Weiterleitung
+                };
+            }, 3000);
+        };
+
+        // Event Listener für den Musik-Controller
+        musicToggle.addEventListener('click', function() {
+            if (bgm.paused) {
+                bgm.play();
+                musicToggle.textContent = 'Pause';
+            } else {
+                bgm.pause();
+                musicToggle.textContent = 'Play';
+            }
+        });
+    </script>
+</body>
+</html>

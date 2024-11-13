@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unsubscribe Game - Level 18</title>
+    <style>
+        body {
+            /* Hintergrundbild */
+            background-image: url('bg05.gif'); /* Verwende bg05.gif */
+            background-size: cover; /* Ganzes Hintergrundbild abdecken */
+            background-repeat: no-repeat;
+            background-position: center center;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: #FFFFFF;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Musik-Controller */
+        .music-controller {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        .music-controller button {
+            background-color: #007BFF;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            margin-left: 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .music-controller button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Hauptcontainer */
+        .main-container {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            max-width: 600px;
+            width: 90%;
+        }
+
+        .main-container h1 {
+            margin-bottom: 20px;
+            font-size: 2em;
+            color: #FFFFFF;
+        }
+
+        /* Hex-Code Anzeige */
+        .hex-display {
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            color: #FFFFFF; /* Weiß für "Dial in..." */
+        }
+
+        /* Farbwahl und Eingabe */
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* Farbrad (Color Wheel) */
+        .color-wheel-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin-bottom: 20px;
+        }
+
+        #color-wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            user-select: none;
+        }
+
+        /* Hex-Code Eingabe */
+        .input-section label {
+            font-size: 1em;
+            margin-bottom: 5px;
+            color: #FFFFFF;
+        }
+
+        .input-section input[type="text"] {
+            padding: 10px;
+            width: 150px;
+            border: 2px solid #CCCCCC;
+            border-radius: 5px;
+            font-size: 1em;
+            text-align: center;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-section input[type="text"]:focus {
+            border-color: #007BFF;
+            outline: none;
+        }
+
+        /* Aktuell gewählter Hex-Code */
+        .current-hex-display {
+            margin-top: 10px;
+            font-size: 1em;
+            color: #FFFFFF;
+        }
+
+        .current-hex-display span {
+            color: #FFD700; /* Goldene Farbe für Hervorhebung */
+        }
+
+        /* Buttons nach Erfolg */
+        .result-buttons {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .result-buttons.show {
+            opacity: 1;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            color: white;
+            text-align: center;
+        }
+
+        .unsubscribe-button {
+            background-color: #FF0000; /* Rot */
+        }
+
+        .unsubscribe-button:hover {
+            background-color: #CC0000;
+        }
+
+        .dismiss-button {
+            background-color: #007BFF; /* Blau */
+        }
+
+        .dismiss-button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .main-container {
+                padding: 20px;
+            }
+
+            .color-wheel-container {
+                width: 150px;
+                height: 150px;
+            }
+
+            .btn {
+                padding: 10px 20px;
+                font-size: 0.9em;
+            }
+
+            .music-controller button {
+                padding: 4px 8px;
+                margin-left: 8px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Musik-Controller -->
+    <div class="music-controller">
+        <span>🎵 Musik</span>
+        <button id="music-toggle">Pause</button>
+    </div>
+
+    <!-- Hauptcontainer -->
+    <div class="main-container">
+        <h1>Verify you really want to Unsubscribe:</h1>
+        <div class="hex-display">
+            Dial in the following HEX-Code: <span id="target-hex">#FFFFFF</span>
+        </div>
+        <div class="input-section">
+            <div class="color-wheel-container">
+                <canvas id="color-wheel"></canvas>
+            </div>
+            
+            <label for="hex-input">Your HEX-Code:</label>
+            <input type="text" id="hex-input" placeholder="#000000" maxlength="7" disabled>
+            
+            <div class="current-hex-display">
+                <!-- Entfernt "Your pick:" und zeigt nur den Hex-Code -->
+                <span id="current-hex">#000000</span>
+            </div>
+        </div>
+        <div class="result-buttons" id="result-buttons">
+            <button class="btn unsubscribe-button" id="unsubscribe-button">Unsubscribe</button>
+            <button class="btn dismiss-button" id="dismiss-button">Dismiss</button>
+        </div>
+    </div>
+
+    <!-- Hintergrundmusik -->
+    <audio id="bgm" src="bgm01.mp3" loop></audio>
+
+    <script>
+        // Referenzen zu DOM-Elementen
+        const musicToggleButton = document.getElementById('music-toggle');
+        const bgm = document.getElementById('bgm');
+        const colorWheel = document.getElementById('color-wheel');
+        const hexInput = document.getElementById('hex-input');
+        const targetHexDisplay = document.getElementById('target-hex');
+        const currentHexDisplay = document.getElementById('current-hex');
+        const resultButtons = document.getElementById('result-buttons');
+        const unsubscribeButton = document.getElementById('unsubscribe-button');
+        const dismissButton = document.getElementById('dismiss-button');
+
+        let targetHex = generateRandomHex();
+
+        // Anzeige des generierten Hex-Codes
+        targetHexDisplay.textContent = targetHex;
+
+        // Starten der Hintergrundmusik automatisch und Deaktivierung des Eingabefeldes für 30 Sekunden
+        window.addEventListener('load', function() {
+            bgm.play().catch(function(error) {
+                // Autoplay wurde blockiert
+                console.log('Autoplay blockiert:', error);
+            });
+
+            // Deaktiviere das Eingabefeld für die ersten 30 Sekunden
+            hexInput.disabled = true;
+            setTimeout(() => {
+                hexInput.disabled = false;
+            }, 30000); // 30000 Millisekunden = 30 Sekunden
+        });
+
+        // Musik-Controller Funktionalität
+        let isPlaying = true;
+        musicToggleButton.addEventListener('click', function() {
+            if (isPlaying) {
+                bgm.pause();
+                musicToggleButton.textContent = 'Play';
+            } else {
+                bgm.play();
+                musicToggleButton.textContent = 'Pause';
+            }
+            isPlaying = !isPlaying;
+        });
+
+        // Farbwahl über Farbrad (Color Wheel)
+        const ctx = colorWheel.getContext('2d');
+        const wheelSize = colorWheel.width = colorWheel.height = 200; // Größe des Farbrads
+
+        // Zeichnen des Farbrads
+        function drawColorWheel() {
+            const radius = wheelSize / 2;
+            for (let angle = 0; angle < 360; angle++) {
+                const startAngle = (angle - 1) * Math.PI / 180;
+                const endAngle = angle * Math.PI / 180;
+                ctx.beginPath();
+                ctx.moveTo(radius, radius);
+                ctx.arc(radius, radius, radius, startAngle, endAngle);
+                ctx.closePath();
+                ctx.fillStyle = `hsl(${angle}, 100%, 50%)`;
+                ctx.fill();
+            }
+        }
+
+        drawColorWheel();
+
+        // Funktion zur Generierung eines zufälligen Hex-Codes
+        function generateRandomHex() {
+            let hex = '#';
+            const validChars = '0123456789ABCDEF';
+            for (let i = 0; i < 6; i++) {
+                hex += validChars[Math.floor(Math.random() * 16)];
+            }
+            return hex;
+        }
+
+        // Event Listener für das Klicken und Halten auf dem Farbrad
+        let isMouseDown = false;
+
+        colorWheel.addEventListener('mousedown', function(event) {
+            isMouseDown = true;
+            updateColorFromEvent(event);
+        });
+
+        colorWheel.addEventListener('mousemove', function(event) {
+            if (isMouseDown) {
+                updateColorFromEvent(event);
+            }
+        });
+
+        colorWheel.addEventListener('mouseup', function(event) {
+            isMouseDown = false;
+        });
+
+        colorWheel.addEventListener('mouseleave', function(event) {
+            isMouseDown = false;
+        });
+
+        // Touch Events für mobile Geräte
+        colorWheel.addEventListener('touchstart', function(event) {
+            isMouseDown = true;
+            updateColorFromEvent(event.touches[0]);
+            event.preventDefault();
+        });
+
+        colorWheel.addEventListener('touchmove', function(event) {
+            if (isMouseDown) {
+                updateColorFromEvent(event.touches[0]);
+            }
+            event.preventDefault();
+        });
+
+        colorWheel.addEventListener('touchend', function(event) {
+            isMouseDown = false;
+        });
+
+        // Funktion zur Aktualisierung der Farbe basierend auf dem Ereignis
+        function updateColorFromEvent(event) {
+            const rect = colorWheel.getBoundingClientRect();
+            const x = event.clientX - rect.left - wheelSize / 2;
+            const y = event.clientY - rect.top - wheelSize / 2;
+            const radius = Math.sqrt(x * x + y * y);
+
+            if (radius > wheelSize / 2) {
+                // Klick außerhalb des Farbrads ignorieren
+                return;
+            }
+
+            let angle = Math.atan2(y, x) * 180 / Math.PI;
+            if (angle < 0) angle += 360;
+
+            const saturation = 100;
+            const lightness = 50;
+            const selectedColor = `hsl(${angle}, ${saturation}%, ${lightness}%)`;
+
+            // Konvertiere HSL zu HEX
+            const hexColor = hslToHex(angle, saturation, lightness);
+            currentHexDisplay.textContent = hexColor;
+            hexInput.value = hexColor;
+            checkHexMatch();
+        }
+
+        // Event Listener für die Hex-Code Eingabe
+        hexInput.addEventListener('input', function() {
+            let value = hexInput.value.toUpperCase();
+            if (!/^#[0-9A-F]{0,6}$/.test(value)) {
+                // Ungültige Eingabe entfernen
+                hexInput.value = value.slice(0, -1);
+                return;
+            }
+            currentHexDisplay.textContent = value;
+            if (value.length === 7) {
+                checkHexMatch();
+            }
+        });
+
+        // Funktion zur Konvertierung von HSL zu HEX
+        function hslToHex(h, s, l) {
+            s /= 100;
+            l /= 100;
+            let c = (1 - Math.abs(2 * l - 1)) * s;
+            let x = c * (1 - Math.abs((h / 60) % 2 - 1));
+            let m = l - c / 2;
+            let r = 0, g = 0, b = 0;
+
+            if (0 <= h && h < 60) {
+                r = c; g = x; b = 0;
+            } else if (60 <= h && h < 120) {
+                r = x; g = c; b = 0;
+            } else if (120 <= h && h < 180) {
+                r = 0; g = c; b = x;
+            } else if (180 <= h && h < 240) {
+                r = 0; g = x; b = c;
+            } else if (240 <= h && h < 300) {
+                r = x; g = 0; b = c;
+            } else if (300 <= h && h < 360) {
+                r = c; g = 0; b = x;
+            }
+
+            r = Math.round((r + m) * 255).toString(16).padStart(2, '0');
+            g = Math.round((g + m) * 255).toString(16).padStart(2, '0');
+            b = Math.round((b + m) * 255).toString(16).padStart(2, '0');
+
+            return `#${r}${g}${b}`.toUpperCase();
+        }
+
+        // Funktion zur Überprüfung des Hex-Codes
+        function checkHexMatch() {
+            const userHex = hexInput.value.toUpperCase();
+            if (userHex === targetHex) {
+                showResultButtons();
+            }
+        }
+
+        // Funktion zur Anzeige der Buttons nach erfolgreicher Eingabe
+        function showResultButtons() {
+            resultButtons.classList.add('show');
+        }
+
+        // Button-Funktionalität
+        unsubscribeButton.addEventListener('click', function() {
+            window.location.href = 'lvl19.html';
+        });
+
+        dismissButton.addEventListener('click', function() {
+            window.location.href = 'start.html';
+        });
+    </script>
+
+</body>
+</html>

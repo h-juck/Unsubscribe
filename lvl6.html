@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unsubscribe Game - Level 6</title>
+    <style>
+        body {
+            /* Background image */
+            background-image: url('bg02.gif');
+            background-size: cover; /* The image should fill the entire background */
+            background-repeat: no-repeat;
+            background-position: center center;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            margin: 0; /* Removes default margins */
+            position: relative; /* For the music controller */
+            color: #FFFFFF; /* Set text color to white */
+        }
+
+        /* Styling for the game window */
+        .game-window {
+            background-color: rgba(0, 0, 0, 0.8); /* Dark background for better contrast */
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            padding: 30px;
+            box-sizing: border-box;
+            text-align: center;
+            color: #FFFFFF; /* Ensure all text inside is white */
+        }
+
+        .game-window h1 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #FFFFFF; /* White text */
+        }
+
+        /* Styling for the form */
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .login-form label {
+            margin: 10px 0 5px 0;
+            font-size: 1.1em;
+            color: #FFFFFF; /* White text */
+        }
+
+        .login-form input {
+            width: 80%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        .login-form input:focus {
+            outline: none;
+            box-shadow: 0 0 5px #007BFF;
+        }
+
+        /* Styling for messages */
+        .message {
+            margin-top: 10px;
+            font-size: 1em;
+            color: #00FF00; /* Green for success */
+        }
+
+        .error {
+            margin-top: 10px;
+            font-size: 1em;
+            color: #FF0000; /* Red for errors */
+        }
+
+        /* Styling for the Proceed button */
+        .proceed-button {
+            width: 100%;
+            padding: 12px;
+            background-color: #cccccc; /* Gray when disabled */
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 1.2em;
+            cursor: not-allowed; /* Cursor indicates the button is not active */
+            transition: background-color 0.3s ease, cursor 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .proceed-button.enabled {
+            background-color: #007BFF; /* Blue when enabled */
+            cursor: pointer;
+        }
+
+        .proceed-button:hover.enabled {
+            background-color: #0056b3;
+        }
+
+        /* Styling for the Back button */
+        .back-button {
+            width: 100%;
+            padding: 10px;
+            background-color: #555555; /* Dark gray for the back button */
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .back-button:hover {
+            background-color: #777777;
+        }
+
+        /* Styling for the music controller */
+        .music-controller {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+            /* Box shadow removed */
+        }
+
+        .music-controller button {
+            background-color: #007BFF;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            margin-left: 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .music-controller button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Responsive design */
+        @media (max-width: 600px) {
+            .game-window {
+                width: 95%;
+                padding: 20px;
+            }
+
+            .login-form input {
+                width: 90%;
+            }
+
+            .proceed-button {
+                font-size: 1em;
+                padding: 10px;
+            }
+
+            .back-button {
+                font-size: 0.9em;
+                padding: 8px;
+            }
+
+            .music-controller {
+                top: 10px;
+                right: 10px;
+                padding: 3px 7px;
+            }
+
+            .music-controller button {
+                padding: 3px 7px;
+                font-size: 0.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Music controller -->
+    <div class="music-controller">
+        <span>🎵 Music</span>
+        <button id="music-toggle">Pause</button>
+    </div>
+
+    <!-- Game window -->
+    <div class="game-window">
+        <h1>Enter your credentials to proceed.</h1>
+
+        <!-- Login form -->
+        <form class="login-form" id="login-form">
+            <label for="username">Name:</label>
+            <input type="text" id="username" name="username" placeholder="Enter your name" required>
+
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" placeholder="Enter your password" required>
+
+            <button type="button" class="proceed-button" id="proceed-button" disabled>Unsubscribe</button>
+        </form>
+
+        <!-- Back button -->
+        <button type="button" class="back-button" id="back-button">Back</button>
+
+        <!-- Messages -->
+        <div class="message" id="message"></div>
+        <div class="error" id="error"></div>
+    </div>
+
+    <!-- Background music -->
+    <audio id="bgm" src="bgm01.mp3" loop></audio>
+
+    <script>
+        // Predefined credentials
+        const correctUsername = "kiosk";
+        const correctPassword = "123456";
+
+        // Get elements
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const proceedButton = document.getElementById('proceed-button');
+        const backButton = document.getElementById('back-button');
+        const messageDiv = document.getElementById('message');
+        const errorDiv = document.getElementById('error');
+
+        // Music controller
+        const musicToggleButton = document.getElementById('music-toggle');
+        const bgm = document.getElementById('bgm');
+        let isPlaying = true;
+
+        musicToggleButton.addEventListener('click', function() {
+            if (isPlaying) {
+                bgm.pause();
+                musicToggleButton.textContent = 'Play';
+            } else {
+                bgm.play();
+                musicToggleButton.textContent = 'Pause';
+            }
+            isPlaying = !isPlaying;
+        });
+
+        // Automatically play background music (may be blocked by browser)
+        window.addEventListener('load', function() {
+            bgm.play().catch(function(error) {
+                // Autoplay was blocked; music can be started by user action
+                console.log('Autoplay blocked:', error);
+            });
+        });
+
+        // Function to check credentials
+        function checkCredentials() {
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value.trim();
+
+            if (username === correctUsername && password === correctPassword) {
+                // Correct credentials
+                proceedButton.disabled = false;
+                proceedButton.classList.add('enabled');
+                messageDiv.textContent = 'Credentials correct! You can unsubscribe.';
+                errorDiv.textContent = '';
+            } else {
+                // Incorrect credentials
+                proceedButton.disabled = true;
+                proceedButton.classList.remove('enabled');
+                if (username === "" || password === "") {
+                    errorDiv.textContent = '';
+                    messageDiv.textContent = '';
+                } else {
+                    errorDiv.textContent = 'Incorrect name or password.';
+                    messageDiv.textContent = '';
+                }
+            }
+        }
+
+        // Event listeners for input fields
+        usernameInput.addEventListener('input', checkCredentials);
+        passwordInput.addEventListener('input', checkCredentials);
+
+        // Proceed button click handler
+        proceedButton.addEventListener('click', function() {
+            if (!this.disabled) {
+                window.location.href = 'lvl7.html';
+            }
+        });
+
+        // Back button click handler
+        backButton.addEventListener('click', function() {
+            window.location.href = 'start.html';
+        });
+    </script>
+
+</body>
+</html>

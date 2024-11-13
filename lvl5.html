@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unsubscribe Game - Level 5</title>
+    <style>
+        body {
+            /* Hintergrundbild */
+            background-image: url('bg01.gif');
+            background-size: cover; /* Bild soll den gesamten Hintergrund ausfüllen */
+            background-repeat: no-repeat;
+            background-position: center center;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            margin: 0; /* Entfernt Standardabstände */
+            position: relative; /* Für den Musik-Controller */
+            color: #FFFFFF; /* Schriftfarbe auf Weiß setzen */
+        }
+
+        /* Styling für das Spiel-Fenster */
+        .game-window {
+            background-color: rgba(0, 0, 0, 0.8); /* Dunkler Hintergrund für besseren Kontrast */
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+            color: #FFFFFF; /* Schriftfarbe auf Weiß setzen */
+        }
+
+        .game-window h1 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            color: #FFFFFF; /* Schriftfarbe auf Weiß setzen */
+        }
+
+        /* Styling für die Captcha-Container */
+        .captcha-container {
+            margin-bottom: 30px;
+        }
+
+        .captcha-info {
+            margin-bottom: 10px;
+            font-size: 1.2em;
+            color: #FFFFFF; /* Schriftfarbe auf Weiß setzen */
+        }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 80px);
+            grid-gap: 10px;
+            justify-content: center;
+            margin: 0 auto;
+        }
+
+        .cell {
+            width: 80px;
+            height: 80px;
+            cursor: pointer;
+            border: 2px solid #555;
+            box-sizing: border-box;
+            transition: transform 0.1s, border 0.3s;
+            border-radius: 5px;
+        }
+
+        .cell:active {
+            transform: scale(0.95);
+        }
+
+        /* Styling für Nachrichten */
+        .message {
+            margin-top: 10px;
+            font-size: 1em;
+            color: #00FF00;
+        }
+
+        .error {
+            margin-top: 10px;
+            font-size: 1em;
+            color: #FF0000;
+        }
+
+        /* Styling für den Proceed-Button */
+        .proceed-button {
+            width: 100%;
+            padding: 10px;
+            background-color: #cccccc; /* Grau als deaktivierter Zustand */
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 1.2em;
+            cursor: not-allowed; /* Cursor zeigt, dass der Button nicht aktiv ist */
+            transition: background-color 0.3s ease, cursor 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .proceed-button.enabled {
+            background-color: #007BFF; /* Blau im aktivierten Zustand */
+            cursor: pointer;
+        }
+
+        .proceed-button:hover.enabled {
+            background-color: #0056b3;
+        }
+
+        /* Styling für den Musik-Controller */
+        .music-controller {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+            /* Schlagschatten entfernt */
+        }
+
+        .music-controller button {
+            background-color: #007BFF;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            margin-left: 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .music-controller button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Responsives Design */
+        @media (max-width: 600px) {
+            .game-window {
+                width: 95%;
+                padding: 15px;
+            }
+
+            .game-grid {
+                grid-template-columns: repeat(3, 60px);
+                grid-gap: 8px;
+            }
+
+            .cell {
+                width: 60px;
+                height: 60px;
+            }
+
+            .proceed-button {
+                font-size: 1em;
+                padding: 8px;
+            }
+
+            .music-controller {
+                top: 10px;
+                right: 10px;
+                padding: 3px 7px;
+            }
+
+            .music-controller button {
+                padding: 3px 7px;
+                font-size: 0.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Musik-Controller -->
+    <div class="music-controller">
+        <span>🎵 Music</span>
+        <button id="music-toggle">Pause</button>
+    </div>
+
+    <!-- Spiel-Fenster -->
+    <div class="game-window">
+        <h1>Verify you are human!</h1>
+
+        <!-- Captcha 1 -->
+        <div class="captcha-container" id="captcha1">
+            <div class="captcha-info">Find the color: <span id="colorName1">Yellow</span></div>
+            <div class="game-grid" id="game1">
+                <!-- 9 Zellen werden hier generiert -->
+            </div>
+            <div class="message" id="message1"></div>
+            <div class="error" id="error1"></div>
+        </div>
+
+        <!-- Captcha 2 -->
+        <div class="captcha-container" id="captcha2" style="display: none;">
+            <div class="captcha-info">Find the color: <span id="colorName2">Red</span></div>
+            <div class="game-grid" id="game2">
+                <!-- 9 Zellen werden hier generiert -->
+            </div>
+            <div class="message" id="message2"></div>
+            <div class="error" id="error2"></div>
+        </div>
+
+        <!-- Captcha 3 -->
+        <div class="captcha-container" id="captcha3" style="display: none;">
+            <div class="captcha-info">Find the color: <span id="colorName3">Blue</span></div>
+            <div class="game-grid" id="game3">
+                <!-- 9 Zellen werden hier generiert -->
+            </div>
+            <div class="message" id="message3"></div>
+            <div class="error" id="error3"></div>
+        </div>
+
+        <!-- Proceed-Button -->
+        <button class="proceed-button" id="proceed-button" disabled>Proceed</button>
+    </div>
+
+    <!-- Hintergrundmusik -->
+    <audio id="bgm" src="bgm01.mp3" loop></audio>
+
+    <script>
+        // Farbdefinitionen
+        const baseColors = {
+            "Yellow": "#FFFF00",
+            "Red": "#FF0000",
+            "Green": "#00FF00",
+            "Blue": "#0000FF",
+            "Orange": "#FFA500",
+            "Purple": "#800080",
+            "Pink": "#FFC0CB",
+            "Turquoise": "#40E0D0",
+            "Brown": "#A52A2A"
+        };
+
+        // Captcha-Definitionen
+        const captchas = [
+            {
+                level: 1,
+                targetColorName: "Yellow",
+                targetHex: baseColors["Yellow"],
+                elementIds: {
+                    info: "colorName1",
+                    game: "game1",
+                    message: "message1",
+                    error: "error1",
+                    container: "captcha1"
+                }
+            },
+            {
+                level: 2,
+                targetColorName: "Red",
+                targetHex: baseColors["Red"],
+                elementIds: {
+                    info: "colorName2",
+                    game: "game2",
+                    message: "message2",
+                    error: "error2",
+                    container: "captcha2"
+                }
+            },
+            {
+                level: 3,
+                targetColorName: "Blue",
+                targetHex: baseColors["Blue"],
+                elementIds: {
+                    info: "colorName3",
+                    game: "game3",
+                    message: "message3",
+                    error: "error3",
+                    container: "captcha3"
+                }
+            }
+        ];
+
+        let currentCaptcha = 0;
+
+        // Musik-Controller
+        const musicToggleButton = document.getElementById('music-toggle');
+        const bgm = document.getElementById('bgm');
+        let isPlaying = true;
+
+        musicToggleButton.addEventListener('click', function() {
+            if (isPlaying) {
+                bgm.pause();
+                musicToggleButton.textContent = 'Play';
+            } else {
+                bgm.play();
+                musicToggleButton.textContent = 'Pause';
+            }
+            isPlaying = !isPlaying;
+        });
+
+        // Hintergrundmusik automatisch abspielen (abhängig vom Browser)
+        window.addEventListener('load', function() {
+            bgm.play().catch(function(error) {
+                // Autoplay wurde blockiert, Musik kann durch Benutzeraktion gestartet werden
+                console.log('Autoplay blocked:', error);
+            });
+        });
+
+        // Funktion zum Starten eines Captchas
+        function startCaptcha(index) {
+            if (index >= captchas.length) {
+                return;
+            }
+
+            const captcha = captchas[index];
+            const infoElem = document.getElementById(captcha.elementIds.info);
+            const gameElem = document.getElementById(captcha.elementIds.game);
+            const containerElem = document.getElementById(captcha.elementIds.container);
+
+            // Setze die Zielfarbe
+            infoElem.textContent = captcha.targetColorName;
+
+            // Generiere die Farben für das Raster
+            let gridColors = [];
+            const numTargets = 1; // Jede Captcha hat nur eine Zielfarbe
+
+            // Füge die Zielfarbe hinzu
+            for(let i = 0; i < numTargets; i++) {
+                gridColors.push(captcha.targetHex);
+            }
+
+            // Füge die Ablenkungsfarben hinzu
+            for(let i = numTargets; i < 9; i++) {
+                let distractorColorName;
+                do {
+                    distractorColorName = getRandomColorName();
+                } while (distractorColorName === captcha.targetColorName);
+                gridColors.push(baseColors[distractorColorName]);
+            }
+
+            // Mische die Farben
+            gridColors = shuffleArray(gridColors);
+
+            // Render das Raster
+            gameElem.innerHTML = '';
+            gridColors.forEach((color, idx) => {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.style.backgroundColor = color;
+                cell.dataset.index = idx;
+                cell.addEventListener('click', function() {
+                    handleCellClick(captcha, cell, color);
+                });
+                gameElem.appendChild(cell);
+            });
+
+            // Zeige das Captcha an
+            containerElem.style.display = 'block';
+        }
+
+        // Funktion zum Handhaben von Zell-Klicks
+        function handleCellClick(captcha, cell, color) {
+            const targetHex = captcha.targetHex.toLowerCase();
+            const clickedHex = color.toLowerCase();
+
+            if (targetHex === clickedHex) {
+                cell.style.border = '4px solid #00FF00';
+                cell.removeEventListener('click', handleCellClick);
+                document.getElementById(captcha.elementIds.message).textContent = 'Correct!';
+                document.getElementById(captcha.elementIds.error).textContent = '';
+
+                // Verstecke das aktuelle Captcha und starte das nächste
+                setTimeout(() => {
+                    document.getElementById(captcha.elementIds.container).style.display = 'none';
+                    currentCaptcha++;
+                    if (currentCaptcha < captchas.length) {
+                        startCaptcha(currentCaptcha);
+                    } else {
+                        // Alle Captchas gelöst
+                        activateProceedButton();
+                    }
+                }, 1000);
+            } else {
+                document.getElementById(captcha.elementIds.error).textContent = 'Wrong! Try again.';
+            }
+        }
+
+        // Funktion zur Aktivierung des Proceed-Buttons
+        function activateProceedButton() {
+            const proceedButton = document.getElementById('proceed-button');
+            proceedButton.disabled = false;
+            proceedButton.classList.add('enabled');
+        }
+
+        // Proceed-Button Handhabung
+        const proceedButton = document.getElementById('proceed-button');
+        proceedButton.addEventListener('click', function() {
+            if (!this.disabled) {
+                window.location.href = 'lvl6.html'; // Passe dies entsprechend an
+            }
+        });
+
+        // Hilfsfunktionen
+        function getRandomColorName() {
+            const keys = Object.keys(baseColors);
+            return keys[Math.floor(Math.random() * keys.length)];
+        }
+
+        function shuffleArray(array) {
+            for(let i = array.length -1; i >0; i--){
+                const j = Math.floor(Math.random() * (i +1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Starte das erste Captcha beim Laden der Seite
+        window.onload = function() {
+            startCaptcha(currentCaptcha);
+        };
+    </script>
+
+</body>
+</html>

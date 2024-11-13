@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unsubscribe Game - Level 2</title>
+    <style>
+        body {
+            /* Hintergrundbild */
+            background-image: url('bg01.gif');
+            background-size: cover; /* Bild soll den gesamten Hintergrund ausfüllen */
+            background-repeat: no-repeat;
+            background-position: center center;
+            display: flex;
+            height: 100vh;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            margin: 0; /* Entfernt Standardabstände */
+        }
+
+        /* Animation für das Pop-up */
+        @keyframes popup {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            80% {
+                transform: scale(1.05);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .window {
+            background-color: rgba(255, 255, 255, 0.9); /* Leicht transparent für besseren Kontrast */
+            border-radius: 15px;
+            /* Verstärkter Schlagschatten */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            width: 400px;
+            padding: 20px;
+            animation: popup 0.5s ease-out forwards;
+        }
+
+        .header {
+            text-align: center;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        /* Styling für die Liste der Gründe */
+        .reasons-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 20px 0;
+        }
+
+        .reasons-list li {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .reasons-list input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+
+        .unsubscribe-button {
+            width: 100%;
+            padding: 10px;
+            background-color: #cccccc; /* Grau als deaktivierter Zustand */
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 1em;
+            cursor: not-allowed; /* Cursor zeigt, dass der Button nicht aktiv ist */
+            transition: background-color 0.3s ease, cursor 0.3s ease;
+        }
+
+        .unsubscribe-button.enabled {
+            background-color: #007BFF; /* Blau im aktivierten Zustand */
+            cursor: pointer;
+        }
+
+        .unsubscribe-button:hover.enabled {
+            background-color: #0056b3;
+        }
+
+        /* Styling für den Musik-Controller */
+        .music-controller {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .music-controller button {
+            background-color: #007BFF;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            margin-left: 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .music-controller button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Responsives Design */
+        @media (max-width: 600px) {
+            .window {
+                width: 90%;
+                padding: 15px;
+            }
+
+            .music-controller {
+                top: 10px;
+                right: 10px;
+                padding: 3px 7px;
+            }
+
+            .music-controller button {
+                padding: 3px 7px;
+                font-size: 0.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Musik-Controller -->
+    <div class="music-controller">
+        <span>🎵 Music</span>
+        <button id="music-toggle">Pause</button>
+    </div>
+
+    <div class="window">
+        <div class="header">Why are you leaving us?</div>
+        <div class="input-group">
+            <ul class="reasons-list">
+                <li>
+                    <input type="checkbox" id="reason1" name="reason" value="No longer needed">
+                    <label for="reason1">I no longer need the service</label>
+                </li>
+                <li>
+                    <input type="checkbox" id="reason2" name="reason" value="Found a better alternative">
+                    <label for="reason2">Found a better alternative</label>
+                </li>
+                <li>
+                    <input type="checkbox" id="reason3" name="reason" value="Privacy concerns">
+                    <label for="reason3">Privacy concerns</label>
+                </li>
+                <li>
+                    <input type="checkbox" id="reason4" name="reason" value="Too expensive">
+                    <label for="reason4">Too expensive</label>
+                </li>
+                <li>
+                    <input type="checkbox" id="reason5" name="reason" value="Not user-friendly">
+                    <label for="reason5">Not user-friendly</label>
+                </li>
+            </ul>
+        </div>
+        <button class="unsubscribe-button" id="unsubscribe-button" disabled>Unsubscribe</button>
+    </div>
+
+    <!-- Hintergrundmusik -->
+    <audio id="bgm" src="bgm01.mp3" loop></audio>
+
+    <script>
+        // Funktion zur Weiterleitung zur nächsten Ebene
+        function goToNextLevel() {
+            window.location.href = 'lvl3.html';
+        }
+
+        // Hintergrundmusik automatisch abspielen (abhängig vom Browser)
+        window.addEventListener('load', function() {
+            const bgm = document.getElementById('bgm');
+            bgm.play().catch(function(error) {
+                // Autoplay wurde blockiert, Musik kann durch Benutzeraktion gestartet werden
+                console.log('Autoplay blockiert:', error);
+            });
+        });
+
+        // Musik-Controller
+        const musicToggleButton = document.getElementById('music-toggle');
+        const bgm = document.getElementById('bgm');
+        let isPlaying = true;
+
+        musicToggleButton.addEventListener('click', function() {
+            if (isPlaying) {
+                bgm.pause();
+                musicToggleButton.textContent = 'Play';
+            } else {
+                bgm.play();
+                musicToggleButton.textContent = 'Pause';
+            }
+            isPlaying = !isPlaying;
+        });
+
+        // Checkbox-Überwachung und Button-Aktivierung
+        const checkboxes = document.querySelectorAll('input[name="reason"]');
+        const unsubscribeButton = document.getElementById('unsubscribe-button');
+
+        checkboxes.forEach(function(checkbox) {
+            checkbox.addEventListener('change', function() {
+                const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+                if (anyChecked) {
+                    unsubscribeButton.disabled = false;
+                    unsubscribeButton.classList.add('enabled');
+                } else {
+                    unsubscribeButton.disabled = true;
+                    unsubscribeButton.classList.remove('enabled');
+                }
+            });
+        });
+
+        // Button-Klick-Event
+        unsubscribeButton.addEventListener('click', function() {
+            if (!this.disabled) {
+                goToNextLevel();
+            }
+        });
+    </script>
+
+</body>
+</html>

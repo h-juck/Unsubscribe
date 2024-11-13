@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unsubscribe Game - Start</title>
+    <style>
+        body {
+            /* Hintergrundbild */
+            background-image: url('bg05.gif');
+            background-size: cover; /* Bild soll den gesamten Hintergrund ausfüllen */
+            background-repeat: no-repeat;
+            background-position: center center;
+            display: flex;
+            height: 100vh;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            margin: 0; /* Entfernt Standardabstände */
+            position: relative; /* Für den Musik-Controller */
+        }
+
+        /* Styling für das Startbild */
+        .start-image {
+            width: 300px; /* Passe die Größe nach Bedarf an */
+            cursor: pointer;
+            border-radius: 15px; /* Optional: Abgerundete Ecken */
+            transition: transform 0.3s ease;
+        }
+
+        .start-image:hover {
+            transform: scale(1.05); /* Leichtes Vergrößern beim Hover */
+        }
+
+        /* Styling für den Musik-Controller */
+        .music-controller {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Optional: Leichter Schatten */
+        }
+
+        .music-controller button {
+            background-color: #007BFF;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            margin-left: 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .music-controller button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Responsives Design */
+        @media (max-width: 600px) {
+            .start-image {
+                width: 80%; /* Anpassung der Bildgröße auf kleineren Bildschirmen */
+            }
+
+            .music-controller {
+                top: 10px;
+                right: 10px;
+                padding: 3px 7px;
+            }
+
+            .music-controller button {
+                padding: 3px 7px;
+                font-size: 0.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Musik-Controller -->
+    <div class="music-controller">
+        <span>🎵 Musik</span>
+        <button id="music-toggle">Pause</button>
+    </div>
+
+    <!-- Startbild -->
+    <img src="BADBOI.gif" alt="Start" class="start-image" id="start-image">
+
+    <!-- Hintergrundmusik -->
+    <audio id="bgm" src="bgm01.mp3" loop></audio>
+
+    <script>
+        // Funktion zur Weiterleitung zu lvl1.html
+        function goToLevel1() {
+            window.location.href = 'lvl20.html';
+        }
+
+        // Startbild-Click-Event
+        const startImage = document.getElementById('start-image');
+        startImage.addEventListener('click', goToLevel1);
+
+        // Hintergrundmusik automatisch abspielen (abhängig vom Browser)
+        window.addEventListener('load', function() {
+            const bgm = document.getElementById('bgm');
+            bgm.play().catch(function(error) {
+                // Autoplay wurde blockiert, Musik kann durch Benutzeraktion gestartet werden
+                console.log('Autoplay blockiert:', error);
+            });
+        });
+
+        // Musik-Controller
+        const musicToggleButton = document.getElementById('music-toggle');
+        const bgm = document.getElementById('bgm');
+        let isPlaying = true;
+
+        musicToggleButton.addEventListener('click', function() {
+            if (isPlaying) {
+                bgm.pause();
+                musicToggleButton.textContent = 'Play';
+            } else {
+                bgm.play();
+                musicToggleButton.textContent = 'Pause';
+            }
+            isPlaying = !isPlaying;
+        });
+    </script>
+
+</body>
+</html>

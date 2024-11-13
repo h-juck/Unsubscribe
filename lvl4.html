@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unsubscribe Game - Level 4</title>
+    <style>
+        body {
+            /* Hintergrundbild */
+            background-image: url('bg01.gif');
+            background-size: cover; /* Bild soll den gesamten Hintergrund ausfüllen */
+            background-repeat: no-repeat;
+            background-position: center center;
+            display: flex;
+            height: 100vh;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            margin: 0; /* Entfernt Standardabstände */
+            position: relative; /* Für den Musik-Controller */
+        }
+
+        /* Animation für das Pop-up */
+        @keyframes popup {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            80% {
+                transform: scale(1.05);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .window {
+            background-color: rgba(255, 255, 255, 0.9); /* Leicht transparent für besseren Kontrast */
+            border-radius: 15px;
+            /* Schlagschatten entfernt */
+            width: 400px;
+            padding: 20px;
+            animation: popup 0.5s ease-out forwards;
+        }
+
+        .header {
+            text-align: center;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        /* Styling für die Liste der Checkboxen */
+        .checkbox-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 20px 0;
+        }
+
+        .checkbox-list li {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .checkbox-list input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+
+        .proceed-button {
+            width: 100%;
+            padding: 10px;
+            background-color: #cccccc; /* Grau als deaktivierter Zustand */
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 1em;
+            cursor: not-allowed; /* Cursor zeigt, dass der Button nicht aktiv ist */
+            transition: background-color 0.3s ease, cursor 0.3s ease;
+        }
+
+        .proceed-button.enabled {
+            background-color: #007BFF; /* Blau im aktivierten Zustand */
+            cursor: pointer;
+        }
+
+        .proceed-button:hover.enabled {
+            background-color: #0056b3;
+        }
+
+        /* Styling für den Musik-Controller */
+        .music-controller {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+            /* Schlagschatten entfernt */
+        }
+
+        .music-controller button {
+            background-color: #007BFF;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            margin-left: 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .music-controller button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Responsives Design */
+        @media (max-width: 600px) {
+            .window {
+                width: 90%;
+                padding: 15px;
+            }
+
+            .music-controller {
+                top: 10px;
+                right: 10px;
+                padding: 3px 7px;
+            }
+
+            .music-controller button {
+                padding: 3px 7px;
+                font-size: 0.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Musik-Controller -->
+    <div class="music-controller">
+        <span>🎵 Musik</span>
+        <button id="music-toggle">Pause</button>
+    </div>
+
+    <div class="window">
+        <div class="header">Please stay! We have a special offer for you!</div>
+        <div class="input-group">
+            <ul class="checkbox-list">
+                <li>
+                    <input type="checkbox" id="offer1" name="offer" value="Yes, I want the special offer!">
+                    <label for="offer1">Yes, I want the special offer!</label>
+                </li>
+                <li>
+                    <!-- Verklausulierte zweite Checkbox -->
+                    <input type="checkbox" id="offer2" name="offer" value="Yes, I have considered the special offer carefully.">
+                    <label for="offer2">Yes, I will proceed without not refusing the offering.</label>
+                </li>
+                <li>
+                    <input type="checkbox" id="offer3" name="offer" value="Yes, I do not refuse not to accept the offer.">
+                    <label for="offer3">Yes, I do not refuse not to accept the offer.</label>
+                </li>
+                <li>
+                    <input type="checkbox" id="offer4" name="offer" value="No, I do not want the offer.">
+                    <label for="offer4">Yes, I have considered the special offer carefully.</label>
+                </li>
+            </ul>
+        </div>
+        <button class="proceed-button" id="proceed-button" disabled>Proceed</button>
+    </div>
+
+    <!-- Hintergrundmusik -->
+    <audio id="bgm" src="bgm01.mp3" loop></audio>
+
+    <script>
+        // Funktion zur Weiterleitung zu lvl5.html oder start.html
+        function proceed() {
+            const offer2 = document.getElementById('offer2');
+            if (offer2.checked) {
+                window.location.href = 'lvl5.html';
+            } else {
+                window.location.href = 'start.html';
+            }
+        }
+
+        // Hintergrundmusik automatisch abspielen (abhängig vom Browser)
+        window.addEventListener('load', function() {
+            const bgm = document.getElementById('bgm');
+            bgm.play().catch(function(error) {
+                // Autoplay wurde blockiert, Musik kann durch Benutzeraktion gestartet werden
+                console.log('Autoplay blockiert:', error);
+            });
+        });
+
+        // Musik-Controller
+        const musicToggleButton = document.getElementById('music-toggle');
+        const bgm = document.getElementById('bgm');
+        let isPlaying = true;
+
+        musicToggleButton.addEventListener('click', function() {
+            if (isPlaying) {
+                bgm.pause();
+                musicToggleButton.textContent = 'Play';
+            } else {
+                bgm.play();
+                musicToggleButton.textContent = 'Pause';
+            }
+            isPlaying = !isPlaying;
+        });
+
+        // Checkbox-Überwachung und Button-Aktivierung
+        const checkboxes = document.querySelectorAll('input[name="offer"]');
+        const proceedButton = document.getElementById('proceed-button');
+
+        checkboxes.forEach(function(checkbox) {
+            checkbox.addEventListener('change', function() {
+                const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+                if (anyChecked) {
+                    proceedButton.disabled = false;
+                    proceedButton.classList.add('enabled');
+                } else {
+                    proceedButton.disabled = true;
+                    proceedButton.classList.remove('enabled');
+                }
+            });
+        });
+
+        // Button-Klick-Event
+        proceedButton.addEventListener('click', function() {
+            if (!this.disabled) {
+                proceed();
+            }
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unsubscribe Game - Level 17</title>
+    <style>
+        body {
+            /* Hintergrundbild */
+            background-image: url('bg05.gif'); /* Stelle sicher, dass bg05.gif im selben Verzeichnis liegt */
+            background-size: cover; /* Ganzes Hintergrundbild abdecken */
+            background-repeat: no-repeat;
+            background-position: center center;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: #FFFFFF;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Musik-Controller */
+        .music-controller {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        .music-controller button {
+            background-color: #007BFF;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            margin-left: 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .music-controller button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Minesweeper Grid */
+        .minesweeper-container {
+            display: grid;
+            grid-template-columns: repeat(8, 40px);
+            grid-template-rows: repeat(8, 40px);
+            gap: 5px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .cell {
+            width: 40px;
+            height: 40px;
+            background-color: #CCCCCC;
+            border: 2px solid #999999;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .cell.revealed {
+            background-color: #E0E0E0;
+            cursor: default;
+            border: 2px solid #666666;
+        }
+
+        .cell.mine {
+            background-color: #FF4C4C;
+            color: #FFFFFF;
+        }
+
+        /* Buttons nach Erfolg */
+        .buttons-container {
+            margin-top: 20px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            color: white;
+            text-align: center;
+        }
+
+        .unsubscribe-button {
+            background-color: #6c757d; /* Grau */
+        }
+
+        .unsubscribe-button:hover {
+            background-color: #5a6268;
+        }
+
+        .dismiss-button {
+            background-color: #007BFF; /* Blau */
+        }
+
+        .dismiss-button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .minesweeper-container {
+                grid-template-columns: repeat(6, 30px);
+                grid-template-rows: repeat(6, 30px);
+                gap: 4px;
+                padding: 15px;
+            }
+
+            .cell {
+                width: 30px;
+                height: 30px;
+                font-size: 0.8em;
+            }
+
+            .buttons-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .btn {
+                padding: 10px 20px;
+                font-size: 0.9em;
+            }
+
+            .music-controller button {
+                padding: 4px 8px;
+                margin-left: 8px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Musik-Controller -->
+    <div class="music-controller">
+        <span>🎵 Musik</span>
+        <button id="music-toggle">Pause</button>
+    </div>
+
+    <!-- Minesweeper Spiel -->
+    <div class="minesweeper-container" id="minesweeper-container">
+        <!-- Zellen werden dynamisch mit JavaScript erstellt -->
+    </div>
+
+    <!-- Buttons nach Erfolg -->
+    <div class="buttons-container" id="buttons-container" style="display: none;">
+        <button class="btn unsubscribe-button" id="unsubscribe-button">Unsubscribe</button>
+        <button class="btn dismiss-button" id="dismiss-button">Dismiss</button>
+    </div>
+
+    <!-- Hintergrundmusik -->
+    <audio id="bgm" src="bgm01.mp3" loop></audio>
+
+    <script>
+        // Konfiguration des Minesweeper-Spiels
+        const ROWS = 8;
+        const COLS = 8;
+        const MINES = 10;
+        const minesweeperContainer = document.getElementById('minesweeper-container');
+        const buttonsContainer = document.getElementById('buttons-container');
+        const unsubscribeButton = document.getElementById('unsubscribe-button');
+        const dismissButton = document.getElementById('dismiss-button');
+        const bgm = document.getElementById('bgm');
+        const musicToggle = document.getElementById('music-toggle');
+
+        let grid = [];
+        let minePositions = [];
+        let cellsRevealed = 0;
+        const totalSafeCells = ROWS * COLS - MINES;
+
+        // Initialisierung des Spiels
+        function initGame() {
+            // Leere das Grid und den Container
+            grid = [];
+            minesweeperContainer.innerHTML = '';
+            cellsRevealed = 0;
+            minePositions = [];
+
+            // Erstelle das Grid
+            for (let r = 0; r < ROWS; r++) {
+                const row = [];
+                for (let c = 0; c < COLS; c++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+                    cell.addEventListener('click', handleCellClick);
+                    minesweeperContainer.appendChild(cell);
+                    row.push(cell);
+                }
+                grid.push(row);
+            }
+
+            // Platzieren der Minen
+            placeMines();
+
+            // Berechne die Zahlen für die Zellen
+            calculateNumbers();
+        }
+
+        // Zufälliges Platzieren der Minen
+        function placeMines() {
+            let minesPlaced = 0;
+            while (minesPlaced < MINES) {
+                const r = Math.floor(Math.random() * ROWS);
+                const c = Math.floor(Math.random() * COLS);
+                if (!minePositions.includes(`${r},${c}`)) {
+                    minePositions.push(`${r},${c}`);
+                    grid[r][c].dataset.mine = 'true';
+                    minesPlaced++;
+                }
+            }
+        }
+
+        // Berechne die Anzahl der benachbarten Minen für jede Zelle
+        function calculateNumbers() {
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    if (grid[r][c].dataset.mine === 'true') continue;
+                    let mineCount = 0;
+                    for (let dr = -1; dr <= 1; dr++) {
+                        for (let dc = -1; dc <= 1; dc++) {
+                            if (dr === 0 && dc === 0) continue;
+                            const nr = r + dr;
+                            const nc = c + dc;
+                            if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
+                                if (grid[nr][nc].dataset.mine === 'true') {
+                                    mineCount++;
+                                }
+                            }
+                        }
+                    }
+                    if (mineCount > 0) {
+                        grid[r][c].dataset.number = mineCount;
+                    }
+                }
+            }
+        }
+
+        // Handler für das Klicken auf eine Zelle
+        function handleCellClick(e) {
+            const cell = e.target;
+            const r = parseInt(cell.dataset.row);
+            const c = parseInt(cell.dataset.col);
+
+            // Wenn die Zelle bereits aufgedeckt ist, tue nichts
+            if (cell.classList.contains('revealed')) return;
+
+            // Aufdecken der Zelle
+            revealCell(r, c);
+
+            // Überprüfen, ob das Spiel gewonnen wurde
+            if (cellsRevealed === totalSafeCells) {
+                gameWon();
+            }
+        }
+
+        // Aufdecken einer Zelle
+        function revealCell(r, c) {
+            const cell = grid[r][c];
+            if (cell.classList.contains('revealed')) return;
+
+            cell.classList.add('revealed');
+
+            if (cell.dataset.mine === 'true') {
+                // Mine getroffen: Spiel verloren
+                cell.classList.add('mine');
+                gameLost();
+            } else {
+                cellsRevealed++;
+                if (cell.dataset.number) {
+                    cell.textContent = cell.dataset.number;
+                    cell.style.color = getNumberColor(cell.dataset.number);
+                } else {
+                    // Keine benachbarten Minen: rekursives Aufdecken
+                    cell.textContent = '';
+                    for (let dr = -1; dr <= 1; dr++) {
+                        for (let dc = -1; dc <= 1; dc++) {
+                            const nr = r + dr;
+                            const nc = c + dc;
+                            if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
+                                if (!grid[nr][nc].classList.contains('revealed')) {
+                                    revealCell(nr, nc);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Farben für die Zahlen
+        function getNumberColor(number) {
+            const colors = {
+                '1': '#0000FF',
+                '2': '#008200',
+                '3': '#FF0000',
+                '4': '#000084',
+                '5': '#840000',
+                '6': '#008284',
+                '7': '#840084',
+                '8': '#000000'
+            };
+            return colors[number] || '#000000';
+        }
+
+        // Spiel verloren
+        function gameLost() {
+            // Alle Minen anzeigen
+            minePositions.forEach(pos => {
+                const [r, c] = pos.split(',').map(Number);
+                grid[r][c].classList.add('mine');
+            });
+            // Weiterleitung zu start.html nach kurzer Verzögerung
+            setTimeout(() => {
+                window.location.href = 'start.html';
+            }, 1000);
+        }
+
+        // Spiel gewonnen
+        function gameWon() {
+            // Anzeige der Buttons
+            buttonsContainer.style.display = 'flex';
+        }
+
+        // Musik-Controller Funktionalität
+        window.addEventListener('load', function() {
+            bgm.play().catch(function(error) {
+                // Autoplay wurde blockiert
+                console.log('Autoplay blockiert:', error);
+            });
+        });
+
+        musicToggle.addEventListener('click', function() {
+            if (bgm.paused) {
+                bgm.play();
+                musicToggle.textContent = 'Pause';
+            } else {
+                bgm.pause();
+                musicToggle.textContent = 'Play';
+            }
+        });
+
+        // Button-Funktionalität
+        unsubscribeButton.addEventListener('click', function() {
+            window.location.href = 'lvl18.html';
+        });
+
+        dismissButton.addEventListener('click', function() {
+            window.location.href = 'start.html';
+        });
+
+        // Initialisiere das Spiel
+        initGame();
+    </script>
+</body>
+</html>

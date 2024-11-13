@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unsubscribe Game - Level 10</title>
+    <style>
+        body {
+            /* Hintergrundbild */
+            background-image: url('bg02.gif'); /* Stellen Sie sicher, dass bg02.gif im gleichen Verzeichnis liegt */
+            background-size: cover; /* Bild soll den gesamten Hintergrund ausfüllen */
+            background-repeat: no-repeat;
+            background-position: center center;
+            margin: 0; /* Entfernt Standardabstände */
+            font-family: Arial, sans-serif;
+            color: #FFFFFF; /* Schriftfarbe auf Weiß setzen */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            position: relative; /* Für den Musik-Controller */
+            overflow: hidden; /* Verhindert Scrollen durch Inhalte */
+        }
+
+        /* Styling für den Musik-Controller */
+        .music-controller {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        .music-controller button {
+            background-color: #007BFF;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            margin-left: 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .music-controller button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Styling für den Container */
+        .container {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            width: 80%;
+            max-width: 400px;
+        }
+
+        .container h1 {
+            margin-bottom: 20px;
+            font-size: 2em;
+            color: #FFFFFF; /* Weiß */
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* Styling für den Schieberegler */
+        .slider-container {
+            margin: 20px 0;
+        }
+
+        .slider-container input[type=range] {
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 15px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            opacity: 0.7;
+            -webkit-transition: .2s;
+            transition: opacity .2s;
+        }
+
+        .slider-container input[type=range]:hover {
+            opacity: 1;
+        }
+
+        .slider-container input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: #007BFF;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .slider-container input[type=range]::-webkit-slider-thumb:hover {
+            background: #0056b3;
+        }
+
+        .slider-container input[type=range]::-moz-range-thumb {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: #007BFF;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .slider-container input[type=range]::-moz-range-thumb:hover {
+            background: #0056b3;
+        }
+
+        /* Beschriftungen für den Schieberegler */
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        /* Styling für den Unsubscribe/Dismiss-Button */
+        #unsubscribe-button {
+            position: fixed; /* fixed position */
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            display: none; /* initially hidden */
+            z-index: 9999; /* high z-index */
+        }
+
+        /* Unsubscribe state */
+        .unsubscribe {
+            background-color: #007BFF; /* blue */
+        }
+
+        .unsubscribe:hover {
+            background-color: #0056b3;
+        }
+
+        /* Dismiss state */
+        .dismiss {
+            background-color: #DC3545; /* red */
+        }
+
+        .dismiss:hover {
+            background-color: #C82333;
+        }
+
+        /* Responsives Design */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                width: 90%;
+            }
+
+            .container h1 {
+                font-size: 1.5em;
+            }
+
+            #unsubscribe-button {
+                padding: 10px 20px;
+                font-size: 1em;
+            }
+
+            .slider-container input[type=range]::-webkit-slider-thumb,
+            .slider-container input[type=range]::-moz-range-thumb {
+                width: 20px;
+                height: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Musik-Controller -->
+    <div class="music-controller">
+        <span>🎵 Musik</span>
+        <button id="music-toggle">Pause</button>
+    </div>
+
+    <!-- Container mit Überschrift und Schieberegler -->
+    <div class="container">
+        <h1>How sure are you?</h1>
+        <div class="slider-container">
+            <input type="range" id="certainty-slider" min="0" max="100" value="0">
+            <div class="slider-labels">
+                <span>Not Sure</span>
+                <span>Sure Sure</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Unsubscribe/Dismiss-Button -->
+    <button id="unsubscribe-button" class="unsubscribe">Unsubscribe</button>
+
+    <!-- Hintergrundmusik -->
+    <audio id="bgm" src="bgm01.mp3" loop></audio>
+
+    <script>
+        // Referenzen zu DOM-Elementen
+        const certaintySlider = document.getElementById('certainty-slider');
+        const unsubscribeButton = document.getElementById('unsubscribe-button');
+        const musicToggleButton = document.getElementById('music-toggle');
+        const bgm = document.getElementById('bgm');
+
+        let isButtonVisible = false; // Flag, ob der Button sichtbar ist
+
+        // Funktion zum Zufallsstellen der Position des Unsubscribe-Buttons
+        function positionButtonRandomly() {
+            const button = unsubscribeButton;
+            const padding = 20; // Abstand vom Rand
+
+            // Berechne die maximalen linken und oberen Positionen
+            const maxLeft = window.innerWidth - button.offsetWidth - padding;
+            const maxTop = window.innerHeight - button.offsetHeight - padding;
+
+            // Zufällige Position innerhalb der Grenzen
+            const randomLeft = Math.floor(Math.random() * maxLeft) + padding;
+            const randomTop = Math.floor(Math.random() * maxTop) + padding;
+
+            button.style.left = `${randomLeft}px`;
+            button.style.top = `${randomTop}px`;
+        }
+
+        // Startet die Hintergrundmusik automatisch
+        window.addEventListener('load', function() {
+            bgm.play().catch(function(error) {
+                // Autoplay wurde blockiert, Musik kann durch Benutzeraktion gestartet werden
+                console.log('Autoplay blockiert:', error);
+            });
+        });
+
+        // Musik-Controller Funktionalität
+        let isPlaying = true;
+        musicToggleButton.addEventListener('click', function() {
+            if (isPlaying) {
+                bgm.pause();
+                musicToggleButton.textContent = 'Play';
+            } else {
+                bgm.play();
+                musicToggleButton.textContent = 'Pause';
+            }
+            isPlaying = !isPlaying;
+        });
+
+        // Event Listener für den Schieberegler (input statt change)
+        certaintySlider.addEventListener('input', function() {
+            if (this.value == this.max && !isButtonVisible) {
+                // Schieberegler ist bis ganz rechts gezogen und der Button ist nicht sichtbar
+                showUnsubscribeButton();
+            }
+        });
+
+        // Funktion zum Anzeigen des Unsubscribe-Buttons
+        function showUnsubscribeButton() {
+            console.log('Unsubscribe-Button soll angezeigt werden');
+            isButtonVisible = true; // Setze das Flag, dass der Button sichtbar ist
+            unsubscribeButton.classList.remove('dismiss'); // Stelle sicher, dass es die unsubscribe Klasse hat
+            unsubscribeButton.classList.add('unsubscribe'); // Füge die unsubscribe Klasse hinzu
+            unsubscribeButton.textContent = 'Unsubscribe'; // Setze den Text
+            unsubscribeButton.style.display = 'block'; // Zeige den Button an
+            positionButtonRandomly(); // Positioniere den Button zufällig
+
+            // Temporärer Event Listener für Unsubscribe
+            unsubscribeButton.onclick = function() {
+                window.location.href = 'lvl11.html';
+            };
+
+            // Verzögerung von 0,6 Sekunden bevor der Button sich ändert
+            setTimeout(() => {
+                console.log('Unsubscribe-Button wird zu Dismiss-Button');
+                // Ändere den Button zu Dismiss
+                unsubscribeButton.classList.remove('unsubscribe');
+                unsubscribeButton.classList.add('dismiss');
+                unsubscribeButton.textContent = 'Dismiss';
+
+                // Temporärer Event Listener für Dismiss
+                unsubscribeButton.onclick = function() {
+                    window.location.href = 'start.html';
+                };
+
+                // Verzögerung von 0,5 Sekunden bevor der Dismiss-Button verschwindet
+                setTimeout(() => {
+                    console.log('Dismiss-Button wird versteckt');
+                    unsubscribeButton.style.display = 'none'; // Verstecke den Button
+                    certaintySlider.value = 0; // Schieberegler zurücksetzen
+                    isButtonVisible = false; // Setze das Flag zurück
+                }, 500); // 500 Millisekunden
+            }, 800); // 600 Millisekunden
+        }
+
+        // Entfernen des eventListeners am Ende, um Konflikte zu vermeiden
+        unsubscribeButton.addEventListener('click', function(event) {
+            // Hier nichts tun, da onclick bereits in showUnsubscribeButton gesetzt wird
+            // Optional: event.preventDefault(); falls nötig
+        });
+    </script>
+
+</body>
+</html>
