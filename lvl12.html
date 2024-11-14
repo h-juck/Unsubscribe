@@ -168,7 +168,7 @@
         let gameOver = false;
 
         let isMouseDown = false; // Verfolgt, ob die Maustaste gedrückt ist
-        let isTouchDown = false; // Verfolgt, ob der Bildschirm berührt wird
+        let activeTouches = 0; // Anzahl der aktiven Touches
         let shootTimer = 0;
         let shootInterval = 200; // Schießt alle 200ms, solange die Maustaste oder der Touch gedrückt ist
 
@@ -209,22 +209,28 @@
         // Event Listener für Touchaktionen
         canvas.addEventListener('touchstart', function(event) {
             event.preventDefault(); // Verhindert das Scrollen/Zoomen
-            isTouchDown = true;
-            if (event.touches.length > 0) {
+            activeTouches = event.touches.length;
+            if (activeTouches > 0) {
                 moveSpaceshipFromTouch(event.touches[0]);
             }
         }, { passive: false });
 
         canvas.addEventListener('touchend', function(event) {
             event.preventDefault();
-            isTouchDown = false;
+            activeTouches = event.touches.length;
         }, { passive: false });
 
         canvas.addEventListener('touchmove', function(event) {
             event.preventDefault();
-            if (isTouchDown && event.touches.length > 0) {
+            activeTouches = event.touches.length;
+            if (activeTouches > 0) {
                 moveSpaceshipFromTouch(event.touches[0]);
             }
+        }, { passive: false });
+
+        canvas.addEventListener('touchcancel', function(event) {
+            event.preventDefault();
+            activeTouches = event.touches.length;
         }, { passive: false });
 
         function moveSpaceship(event) {
@@ -303,8 +309,8 @@
                 spaceship.y += dy * 0.1;
             }
 
-            // Schießen, solange die Maustaste oder der Touch gedrückt ist
-            if (isMouseDown || isTouchDown) {
+            // Schießen, solange die Maustaste oder mindestens ein Touch aktiv ist
+            if (isMouseDown || activeTouches > 0) {
                 shootTimer += deltaTime;
                 if (shootTimer >= shootInterval) {
                     shootBullets();
@@ -368,7 +374,7 @@
                 if (!e.hit && isRectColliding(spaceship, e)) {
                     // Spiel pausieren und Dialog anzeigen
                     isMouseDown = false;
-                    isTouchDown = false;
+                    activeTouches = 0;
                     showFirstDialog();
                     gameOver = true;
                     return;
@@ -494,17 +500,17 @@
         function showFirstDialog() {
             dialogOverlay.style.display = 'flex';
             dialogBox.innerHTML = `
-                <p>Sure You Want to Dismiss?</p>
-                <button class="blue-button" onclick="redirectToStart()">Yes</button>
-                <button class="red-button" onclick="showSecondDialog()">No</button>
+                <p>Bist du sicher, dass du abbrechen möchtest?</p>
+                <button class="blue-button" onclick="redirectToStart()">Ja</button>
+                <button class="red-button" onclick="showSecondDialog()">Nein</button>
             `;
         }
 
         function showSecondDialog() {
             dialogBox.innerHTML = `
-                <p>Are you really sure?</p>
-                <button class="gray-button" onclick="closeDialog()">Yes</button>
-                <button class="blue-button" onclick="redirectToStart()">No</button>
+                <p>Bist du wirklich sicher?</p>
+                <button class="gray-button" onclick="closeDialog()">Ja</button>
+                <button class="blue-button" onclick="redirectToStart()">Nein</button>
             `;
         }
 
