@@ -168,8 +168,9 @@
         let gameOver = false;
 
         let isMouseDown = false; // Verfolgt, ob die Maustaste gedrückt ist
+        let isTouchDown = false; // Verfolgt, ob der Bildschirm berührt wird
         let shootTimer = 0;
-        let shootInterval = 200; // Schießt alle 200ms, solange die Maustaste gedrückt ist
+        let shootInterval = 200; // Schießt alle 200ms, solange die Maustaste oder der Touch gedrückt ist
 
         // Hintergrundmusik starten
         bgm.play().catch(function(error) {
@@ -205,6 +206,27 @@
             }
         });
 
+        // Event Listener für Touchaktionen
+        canvas.addEventListener('touchstart', function(event) {
+            event.preventDefault(); // Verhindert das Scrollen/Zoomen
+            isTouchDown = true;
+            if (event.touches.length > 0) {
+                moveSpaceshipFromTouch(event.touches[0]);
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchend', function(event) {
+            event.preventDefault();
+            isTouchDown = false;
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', function(event) {
+            event.preventDefault();
+            if (isTouchDown && event.touches.length > 0) {
+                moveSpaceshipFromTouch(event.touches[0]);
+            }
+        }, { passive: false });
+
         function moveSpaceship(event) {
             let rect = canvas.getBoundingClientRect();
             let mouseX = event.clientX - rect.left;
@@ -213,6 +235,16 @@
             // Setze das Ziel des Raumschiffs
             spaceship.targetX = mouseX;
             spaceship.targetY = mouseY;
+        }
+
+        function moveSpaceshipFromTouch(touch) {
+            let rect = canvas.getBoundingClientRect();
+            let touchX = touch.clientX - rect.left;
+            let touchY = touch.clientY - rect.top;
+
+            // Setze das Ziel des Raumschiffs
+            spaceship.targetX = touchX;
+            spaceship.targetY = touchY;
         }
 
         // Funktion zum Schießen
@@ -271,8 +303,8 @@
                 spaceship.y += dy * 0.1;
             }
 
-            // Schießen, solange die Maustaste gedrückt ist
-            if (isMouseDown) {
+            // Schießen, solange die Maustaste oder der Touch gedrückt ist
+            if (isMouseDown || isTouchDown) {
                 shootTimer += deltaTime;
                 if (shootTimer >= shootInterval) {
                     shootBullets();
@@ -336,6 +368,7 @@
                 if (!e.hit && isRectColliding(spaceship, e)) {
                     // Spiel pausieren und Dialog anzeigen
                     isMouseDown = false;
+                    isTouchDown = false;
                     showFirstDialog();
                     gameOver = true;
                     return;
